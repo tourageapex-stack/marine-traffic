@@ -61,45 +61,79 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
   };
 
   return (
-    <div className="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th onClick={() => requestSort('status')} style={{ cursor: 'pointer' }}>Status</th>
-            <th onClick={() => requestSort('orderTime')} style={{ cursor: 'pointer' }}>Set Time</th>
-            <th onClick={() => requestSort('vessel.name')} style={{ cursor: 'pointer' }}>Vessel</th>
-            <th>From</th>
-            <th>To</th>
-            <th>L.From</th>
-            <th>L.To</th>
-            <th>Conf.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((vessel, index) => (
-            <tr key={`${vessel.vessel.name}-${index}`}>
-              <td>
-                <span className={`status-badge ${getStatusClass(vessel.status)}`}>
-                  {vessel.status}
-                </span>
-              </td>
-              <td>{formatTime(vessel.orderTime)}</td>
-              <td style={{ fontWeight: 600 }}>{vessel.vessel.name}</td>
-              <td>{vessel.fromLocationName}</td>
-              <td>{vessel.toLocationName}</td>
-              <td>
-                <span className="port-badge">{vessel.fromLocationShortCode}</span>
-              </td>
-              <td>
-                <span className="port-badge">{vessel.toLocationShortCode}</span>
-              </td>
-              <td style={{ textAlign: 'center' }}>
-                {vessel.status === 'Confirmed' ? '✅' : '-'}
-              </td>
+    <div className="vessel-display-container">
+      {/* Desktop Table View */}
+      <div className="table-container desktop-only">
+        <table>
+          <thead>
+            <tr>
+              <th onClick={() => requestSort('status')} style={{ cursor: 'pointer' }}>Status</th>
+              <th onClick={() => requestSort('orderTime')} style={{ cursor: 'pointer' }}>Set Time</th>
+              <th onClick={() => requestSort('vessel.name')} style={{ cursor: 'pointer' }}>Vessel</th>
+              <th>From</th>
+              <th>To</th>
+              <th>L.From</th>
+              <th>L.To</th>
+              <th>Conf.</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedData.map((vessel, index) => (
+              <tr key={`${vessel.vessel.name}-${index}`}>
+                <td>
+                  <span className={`status-badge ${getStatusClass(vessel.status)}`}>
+                    {vessel.status}
+                  </span>
+                </td>
+                <td>{formatTime(vessel.orderTime)}</td>
+                <td style={{ fontWeight: 600 }}>{vessel.vessel.name}</td>
+                <td>{vessel.fromLocationName}</td>
+                <td>{vessel.toLocationName}</td>
+                <td>
+                  <span className="port-badge">{vessel.fromLocationShortCode}</span>
+                </td>
+                <td>
+                  <span className="port-badge">{vessel.toLocationShortCode}</span>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  {vessel.status === 'Confirmed' ? '✅' : '-'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="mobile-only mobile-cards">
+        {sortedData.map((vessel, index) => (
+          <div className="vessel-card" key={`${vessel.vessel.name}-card-${index}`}>
+            <div className="card-header">
+              <span className={`status-badge ${getStatusClass(vessel.status)}`}>
+                {vessel.status}
+              </span>
+              <span className="card-time">{formatTime(vessel.orderTime)}</span>
+            </div>
+            <h3 className="card-vessel-name">{vessel.vessel.name}</h3>
+            <div className="card-route">
+              <div className="route-stop">
+                <span className="route-label">FROM</span>
+                <span className="route-name">{vessel.fromLocationName}</span>
+                <span className="port-badge">{vessel.fromLocationShortCode}</span>
+              </div>
+              <div className="route-arrow">↓</div>
+              <div className="route-stop">
+                <span className="route-label">TO</span>
+                <span className="route-name">{vessel.toLocationName}</span>
+                <span className="port-badge">{vessel.toLocationShortCode}</span>
+              </div>
+            </div>
+            <div className="card-footer">
+               {vessel.status === 'Confirmed' && <span className="conf-indicator">✅ Confirmed</span>}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

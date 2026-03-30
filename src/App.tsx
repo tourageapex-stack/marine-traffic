@@ -12,6 +12,10 @@ function App() {
   
   const PORTS = ['Vancouver', 'Portland', 'Longview'];
   const [activePort, setActivePort] = useState(PORTS[0]);
+  
+  const isMobile = useMemo(() => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -56,7 +60,7 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
       <header>
         <div className="header-content">
           <h1>Marine Traffic</h1>
