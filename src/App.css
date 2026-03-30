@@ -310,18 +310,31 @@ tr:hover td {
   animation: slideDown 0.4s ease-out;
 }
 
-/* Visibility Utilities */
-@media (min-width: 769px) {
-  .mobile-only {
-    display: none !important;
-  }
+/* Responsive Table Grid */
+.table-responsive-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
-@media (max-width: 768px) {
-  .desktop-only {
+.table-responsive-container table {
+  min-width: 800px; /* Force minimum width to ensure columns don't crunch too much */
+}
+
+/* Visibility Utilities */
+@media (max-width: 640px) {
+  .hide-on-compact {
     display: none !important;
   }
   
+  .table-responsive-container table {
+    min-width: 650px; /* Slightly smaller min-width for mobile */
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
