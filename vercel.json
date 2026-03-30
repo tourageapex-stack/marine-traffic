@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/vessel-data-api/(.*)",
+      "destination": "/api/proxy"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "framework": "vite"
+}
