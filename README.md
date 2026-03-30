@@ -22,5 +22,5 @@ This project is optimized for deployment on **Vercel**.
 2.  **Import to Vercel**: Connect your GitHub account to [vercel.com](https://vercel.com) and import the "Marine Traffic" project.
 3.  **Deploy**: Vercel will automatically detect Vite and the serverless functions in `api/`.
 
-## Live Demo
+## Live Demo MEOW
 [Your Vercel URL will appear here after deployment]
