@@ -9,6 +9,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [searchTerm, setSearchTerm] = useState('');
   
   const PORTS = ['Vancouver', 'Portland', 'Longview'];
   const [activePort, setActivePort] = useState(PORTS[0]);
@@ -50,11 +51,26 @@ function App() {
     }, {} as Record<string, VesselTraffic[]>);
   }, [filteredData]);
 
+  // Search filtering logic
+  const searchFilteredVessels = useMemo(() => {
+    const activeVessels = portGroups[activePort] || [];
+    if (!searchTerm.trim()) return activeVessels;
+    
+    const term = searchTerm.toLowerCase();
+    return activeVessels.filter(v => 
+      v.vessel.name.toLowerCase().includes(term) ||
+      v.fromLocationName.toLowerCase().includes(term) ||
+      v.toLocationName.toLowerCase().includes(term) ||
+      v.status.toLowerCase().includes(term)
+    );
+  }, [portGroups, activePort, searchTerm]);
+
   if (loading && data.length === 0) {
     return (
-      <div className="loading-container">
-        <div className="loader"></div>
-        <p>Connecting to Marine Traffic System...</p>
+      <div className="loading-container" style={{ background: '#f8fafc', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="loader" style={{ border: '4px solid #e2e8f0', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ marginTop: '1rem', color: '#64748b', fontWeight: 500 }}>Connecting to Marine Traffic System...</p>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -63,51 +79,93 @@ function App() {
     <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
       <header>
         <div className="header-content">
-          <h1>Marine Traffic</h1>
-          <div className="meta-info">
-            <div className="live-indicator">
-              <span className="dot"></span> LIVE
-            </div>
-            <span className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</span>
+          <div className="header-title-group">
+            <h1>
+              <span style={{ fontSize: '1.5rem' }}>⚓</span>
+              Marine Traffic
+            </h1>
+            <div className="header-subtitle">Vancouver, Portland & Longview Ports</div>
+          </div>
+          
+          <div className="refresh-section">
+            <div className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</div>
+            <button className="refresh-button" onClick={() => loadData()}>
+               <span>🔄</span> Refresh
+            </button>
           </div>
         </div>
       </header>
       
-      {error && <div className="error-message">⚠️ {error}</div>}
+      {error && <div className="error-message" style={{ margin: '1rem 2rem' }}>⚠️ {error}</div>}
 
-      <main>
-        <nav className="tab-nav">
-          {PORTS.map(port => (
-            <button 
-              key={port} 
-              className={`tab-button ${activePort === port ? 'active' : ''}`}
-              onClick={() => setActivePort(port)}
-            >
-              {port}
-              <span className="count-badge">
-                {portGroups[port]?.length || 0}
-              </span>
-            </button>
-          ))}
-        </nav>
-
-        <section className="port-section active">
-          <div className="section-header">
-            <h2>{activePort} Traffic</h2>
-            <div className="vessel-count">
-              {portGroups[activePort]?.length || 0} Vessels Detected
+      <main className="main-content">
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stats-card">
+            <div className="stats-icon stats-van">🚢</div>
+            <div className="stats-info">
+              <div className="stats-count">{portGroups['Vancouver']?.length || 0}</div>
+              <div className="stats-label">Vancouver</div>
             </div>
           </div>
-          
-          {portGroups[activePort] && portGroups[activePort].length > 0 ? (
-            <VesselTable data={portGroups[activePort]} />
-          ) : (
-            <div className="empty-state">No current activity reported for {activePort}.</div>
-          )}
-        </section>
+          <div className="stats-card">
+            <div className="stats-icon stats-pdx">⚓</div>
+            <div className="stats-info">
+              <div className="stats-count">{portGroups['Portland']?.length || 0}</div>
+              <div className="stats-label">Portland</div>
+            </div>
+          </div>
+          <div className="stats-card">
+            <div className="stats-icon stats-cob">📍</div>
+            <div className="stats-info">
+              <div className="stats-count">{portGroups['Longview']?.length || 0}</div>
+              <div className="stats-label">Longview</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Dashboard Card */}
+        <div className="dashboard-card">
+          <nav className="card-tabs">
+            {PORTS.map(port => (
+              <button 
+                key={port} 
+                className={`tab-pill ${activePort === port ? 'active' : ''}`}
+                onClick={() => setActivePort(port)}
+                data-short={port.substring(0, 3).toUpperCase()}
+              >
+                 <span>{port}</span> ({portGroups[port]?.length || 0})
+              </button>
+            ))}
+          </nav>
+
+          <div className="search-container">
+            <div className="search-wrapper">
+              <span className="search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search vessels by name, port, or status..." 
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="table-wrapper">
+            {searchFilteredVessels.length > 0 ? (
+              <VesselTable data={searchFilteredVessels} />
+            ) : (
+              <div className="empty-state" style={{ padding: '4rem 2rem', textAlign: 'center', color: '#94a3b8' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚢</div>
+                <div>No vessels match your search "{searchTerm}" in {activePort}.</div>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
 
-      <footer>
+      <footer style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.8125rem' }}>
         <p>© 2026 Marine Traffic Monitor | Data via ColRip Portal</p>
       </footer>
     </div>

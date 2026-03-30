@@ -44,11 +44,10 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
 
   const getStatusClass = (status: string) => {
     const s = status.toLowerCase();
-    if (s.includes('dispatched')) return 'status-dispatched';
-    if (s.includes('order')) return 'status-order';
-    if (s.includes('priority')) return 'status-priority';
-    if (s.includes('confirmed')) return 'status-confirmed';
-    return '';
+    if (s.includes('dispatched') || s.includes('away')) return 'status-emerald';
+    if (s.includes('order') || s.includes('est') || s.includes('priority')) return 'status-amber';
+    if (s.includes('confirmed') || s.includes('set')) return 'status-blue';
+    return 'status-slate';
   };
 
   const formatTime = (timeStr: string) => {
@@ -60,43 +59,48 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
     }
   };
 
+  const SortIndicator = ({ column }: { column: SortKey }) => {
+    if (sortConfig?.key !== column) return <span style={{ color: '#cbd5e1', marginLeft: '0.5rem' }}>↕</span>;
+    return <span style={{ color: '#3b82f6', marginLeft: '0.5rem' }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
+
   return (
     <div className="vessel-display-container">
       {/* Desktop Table View */}
-      <div className="table-container desktop-only">
+      <div className="desktop-only">
         <table>
           <thead>
             <tr>
-              <th onClick={() => requestSort('status')} style={{ cursor: 'pointer' }}>Status</th>
-              <th onClick={() => requestSort('orderTime')} style={{ cursor: 'pointer' }}>Set Time</th>
-              <th onClick={() => requestSort('vessel.name')} style={{ cursor: 'pointer' }}>Vessel</th>
+              <th onClick={() => requestSort('status')}>Status <SortIndicator column="status" /></th>
+              <th onClick={() => requestSort('orderTime')}>Set Time <SortIndicator column="orderTime" /></th>
+              <th onClick={() => requestSort('vessel.name')}>Vessel <SortIndicator column="vessel.name" /></th>
               <th>From</th>
               <th>To</th>
               <th>L.From</th>
               <th>L.To</th>
-              <th>Conf.</th>
+              <th style={{ textAlign: 'center' }}>Conf.</th>
             </tr>
           </thead>
           <tbody>
             {sortedData.map((vessel, index) => (
               <tr key={`${vessel.vessel.name}-${index}`}>
                 <td>
-                  <span className={`status-badge ${getStatusClass(vessel.status)}`}>
+                  <span className={`status-pill ${getStatusClass(vessel.status)}`}>
                     {vessel.status}
                   </span>
                 </td>
-                <td>{formatTime(vessel.orderTime)}</td>
-                <td style={{ fontWeight: 600 }}>{vessel.vessel.name}</td>
-                <td>{vessel.fromLocationName}</td>
-                <td>{vessel.toLocationName}</td>
+                <td style={{ color: '#64748b', fontSize: '0.8125rem' }}>{formatTime(vessel.orderTime)}</td>
+                <td className="vessel-name">{vessel.vessel.name}</td>
+                <td style={{ color: '#475569' }}>{vessel.fromLocationName}</td>
+                <td style={{ color: '#475569' }}>{vessel.toLocationName}</td>
                 <td>
-                  <span className="port-badge">{vessel.fromLocationShortCode}</span>
+                  <span className="port-code">{vessel.fromLocationShortCode}</span>
                 </td>
                 <td>
-                  <span className="port-badge">{vessel.toLocationShortCode}</span>
+                  <span className="port-code">{vessel.toLocationShortCode}</span>
                 </td>
                 <td style={{ textAlign: 'center' }}>
-                  {vessel.status === 'Confirmed' ? '✅' : '-'}
+                  {vessel.status === 'Confirmed' ? <span title="Confirmed">✅</span> : <span style={{ color: '#e2e8f0' }}>-</span>}
                 </td>
               </tr>
             ))}
@@ -105,32 +109,36 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
       </div>
 
       {/* Mobile Card View */}
-      <div className="mobile-only mobile-cards">
+      <div className="mobile-only mobile-cards" style={{ padding: '1rem' }}>
         {sortedData.map((vessel, index) => (
-          <div className="vessel-card" key={`${vessel.vessel.name}-card-${index}`}>
-            <div className="card-header">
-              <span className={`status-badge ${getStatusClass(vessel.status)}`}>
+          <div className="vessel-card" key={`${vessel.vessel.name}-card-${index}`} style={{ background: 'white', border: '1px solid #e2e8f0' }}>
+            <div className="card-header" style={{ marginBottom: '1rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.75rem' }}>
+              <span className={`status-pill ${getStatusClass(vessel.status)}`}>
                 {vessel.status}
               </span>
-              <span className="card-time">{formatTime(vessel.orderTime)}</span>
+              <span className="card-time" style={{ color: '#64748b' }}>{formatTime(vessel.orderTime)}</span>
             </div>
-            <h3 className="card-vessel-name">{vessel.vessel.name}</h3>
-            <div className="card-route">
-              <div className="route-stop">
-                <span className="route-label">FROM</span>
-                <span className="route-name">{vessel.fromLocationName}</span>
-                <span className="port-badge">{vessel.fromLocationShortCode}</span>
+            <h3 className="card-vessel-name" style={{ color: '#0f172a', fontWeight: 800 }}>{vessel.vessel.name}</h3>
+            
+            <div className="card-route" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+              <div className="route-stop" style={{ marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.625rem', fontWeight: 900, color: '#94a3b8', width: '40px' }}>FROM</span>
+                <span className="route-name" style={{ color: '#334155', fontWeight: 500 }}>{vessel.fromLocationName}</span>
+                <span className="port-code" style={{ marginLeft: 'auto' }}>{vessel.fromLocationShortCode}</span>
               </div>
-              <div className="route-arrow">↓</div>
+              <div style={{ paddingLeft: '48px', color: '#cbd5e1', fontSize: '0.75rem', marginBottom: '0.75rem' }}>↓</div>
               <div className="route-stop">
-                <span className="route-label">TO</span>
-                <span className="route-name">{vessel.toLocationName}</span>
-                <span className="port-badge">{vessel.toLocationShortCode}</span>
+                <span style={{ fontSize: '0.625rem', fontWeight: 900, color: '#94a3b8', width: '40px' }}>TO</span>
+                <span className="route-name" style={{ color: '#334155', fontWeight: 500 }}>{vessel.toLocationName}</span>
+                <span className="port-code" style={{ marginLeft: 'auto' }}>{vessel.toLocationShortCode}</span>
               </div>
             </div>
-            <div className="card-footer">
-               {vessel.status === 'Confirmed' && <span className="conf-indicator">✅ Confirmed</span>}
-            </div>
+            
+            {vessel.status === 'Confirmed' && (
+              <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>✅ Confirmed Entry</span>
+              </div>
+            )}
           </div>
         ))}
       </div>

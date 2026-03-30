@@ -1,26 +1,42 @@
 # Marine Traffic Dashboard
 
-A premium, real-time dashboard for monitoring vessel traffic at the Vancouver, Portland, and Longview ports.
+A premium, enterprise-grade dashboard for monitoring real-time vessel traffic at the **Vancouver**, **Portland**, and **Longview** ports.
 
-## Features
-- **Real-Time Data**: Live fetching from the ColRip Portal.
-- **Tab Navigation**: Separate views for each major port with vessel counts.
-- **Premium UI**: Dark-mode aesthetic with Inter typography and glassmorphism.
-- **Reliable Proxy**: Integrated Vercel Serverless Function to handle CORS in production.
+## ⚓ Features
 
-## Getting Started
+- **Enterprise Light Theme**: Clean, professional light-slate design optimized for corporate and operational use.
+- **Real-Time Stats Grid**: Summary cards providing instant vessel counts for all monitored ports.
+- **Global Search Filtering**: Real-time vessel search by name, port, or status across any viewport.
+- **Pill-Style Navigation**: Modern, intuitive port selection with dynamic vessel counter updates.
+- **Advanced Mobile View**: Intelligent **User-Agent detection** with a high-fidelity, card-based layout for field operations.
+- **Vercel Serverless Proxy**: Production-ready CORS handling via `api/proxy.js` to ensure reliable live data fetching.
 
-1.  Clone the repository.
-2.  Install dependencies: `npm install`.
-3.  Run locally: `npm run dev`.
+## 🚀 Getting Started
 
-## Deployment (Free)
+1.  **Clone the repository**: `git clone https://github.com/tourageapex-stack/marine-traffic.git`
+2.  **Install dependencies**: `npm install`
+3.  **Run locally**: `npm run dev`
+4.  **Production Build**: `npm run build`
 
-This project is optimized for deployment on **Vercel**.
+## 🛠 Tech Stack
 
-1.  **Create a GitHub Repo**: Push this code to a new repository on GitHub.
-2.  **Import to Vercel**: Connect your GitHub account to [vercel.com](https://vercel.com) and import the "Marine Traffic" project.
-3.  **Deploy**: Vercel will automatically detect Vite and the serverless functions in `api/`.
+- **Framework**: React 19 + TypeScript + Vite
+- **Styling**: Vanilla CSS with a custom design system
+- **Deployment**: Optimized for **Vercel** with Serverless Function support
+- **Data Source**: ColRip Portal Live API
 
-## Live Demo MEOW
-[Your Vercel URL will appear here after deployment]
+## 📱 Mobile Optimized
+
+The dashboard features a **Dual-View Architecture**:
+- **Desktop**: High-density sorted table with all operational columns.
+- **Mobile**: Touch-optimized cards with high-contrast status pills and route flows.
+
+## 🌐 Deployment (Vercel)
+
+This project is ready for one-click deployment to Vercel:
+1. Connect your GitHub repository.
+2. Ensure the `vercel.json` is at the root.
+3. Deploy! The API proxy will handle all cross-origin requests automatically.
+
+---
+**Maintained by Marine Traffic Systems | 2026**
