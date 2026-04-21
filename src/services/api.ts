@@ -55,8 +55,8 @@ export const fetchVesselTraffic = async (): Promise<VesselTraffic[]> => {
 
 export const filterByPorts = (data: VesselTraffic[], ports: string[]): VesselTraffic[] => {
   return data.filter(item => {
-    const from = (item.fromLocationName || '').toLowerCase();
     const to = (item.toLocationName || '').toLowerCase();
-    return ports.some(port => from.includes(port.toLowerCase()) || to.includes(port.toLowerCase()));
+    const toShort = (item.toLocationShortCode || '').toLowerCase();
+    return ports.some(port => to.includes(port.toLowerCase()) || toShort.includes(port.toLowerCase()));
   });
 };

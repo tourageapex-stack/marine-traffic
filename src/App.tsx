@@ -43,9 +43,10 @@ function App() {
   const portGroups = useMemo(() => {
     return PORTS.reduce((acc, port) => {
       acc[port] = filteredData.filter(item => {
-        const from = item.fromLocationName?.toLowerCase() || '';
         const to = item.toLocationName?.toLowerCase() || '';
-        return from.includes(port.toLowerCase()) || to.includes(port.toLowerCase());
+        const toShort = item.toLocationShortCode?.toLowerCase() || '';
+        const searchPort = port.toLowerCase();
+        return to.includes(searchPort) || toShort.includes(searchPort);
       });
       return acc;
     }, {} as Record<string, VesselTraffic[]>);

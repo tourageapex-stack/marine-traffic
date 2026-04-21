@@ -53,7 +53,13 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
   const formatTime = (timeStr: string) => {
     try {
       const date = new Date(timeStr);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      return date.toLocaleString([], { 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false 
+      });
     } catch {
       return timeStr;
     }
@@ -66,8 +72,8 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
 
   return (
     <div className="vessel-display-container">
-      {/* Unified Table View - Responsive via CSS overflow */}
-      <div className="table-responsive-container">
+      {/* Desktop Table View */}
+      <div className="desktop-only">
         <table>
           <thead>
             <tr>
@@ -76,9 +82,6 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
               <th onClick={() => requestSort('vessel.name')}>Vessel <SortIndicator column="vessel.name" /></th>
               <th>From</th>
               <th>To</th>
-              <th className="hide-on-compact">L.From</th>
-              <th className="hide-on-compact">L.To</th>
-              <th style={{ textAlign: 'center' }}>Conf.</th>
             </tr>
           </thead>
           <tbody>
@@ -89,23 +92,54 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
                     {vessel.status}
                   </span>
                 </td>
-                <td style={{ color: '#64748b', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}>{formatTime(vessel.orderTime)}</td>
-                <td className="vessel-name" style={{ whiteSpace: 'nowrap' }}>{vessel.vessel.name}</td>
-                <td style={{ color: '#475569', minWidth: '150px' }}>{vessel.fromLocationName}</td>
-                <td style={{ color: '#475569', minWidth: '150px' }}>{vessel.toLocationName}</td>
-                <td className="hide-on-compact">
+                <td style={{ color: '#64748b', fontSize: '0.8125rem' }}>{formatTime(vessel.orderTime)}</td>
+                <td className="vessel-name">{vessel.vessel.name}</td>
+                <td>
                   <span className="port-code">{vessel.fromLocationShortCode}</span>
                 </td>
-                <td className="hide-on-compact">
+                <td>
                   <span className="port-code">{vessel.toLocationShortCode}</span>
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  {vessel.status === 'Confirmed' ? <span title="Confirmed">✅</span> : <span style={{ color: '#e2e8f0' }}>-</span>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View - "At-a-Glance" Vertical Stacking */}
+      <div className="mobile-only mobile-cards">
+        {sortedData.map((vessel, index) => (
+          <div className="vessel-card" key={`${vessel.vessel.name}-card-${index}`}>
+            <div className="card-header">
+              <span className={`status-pill ${getStatusClass(vessel.status)}`}>
+                {vessel.status}
+              </span>
+              <span className="card-time">{formatTime(vessel.orderTime)}</span>
+            </div>
+            
+            <h3 className="card-vessel-name">{vessel.vessel.name}</h3>
+            
+            <div className="card-route-stack">
+              <div className="route-step">
+                <div className="route-indicator from"></div>
+                <div className="route-details">
+                  <span className="route-label">FROM</span>
+                  <span className="port-code">{vessel.fromLocationShortCode}</span>
+                </div>
+              </div>
+              
+              <div className="route-line"></div>
+              
+              <div className="route-step">
+                <div className="route-indicator to"></div>
+                <div className="route-details">
+                  <span className="route-label">TO</span>
+                  <span className="port-code">{vessel.toLocationShortCode}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
