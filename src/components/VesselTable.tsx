@@ -65,6 +65,33 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
     }
   };
 
+  const getEstimatedTieUpTime = (vessel: VesselTraffic) => {
+    const fromCode = (vessel.fromLocationShortCode || '').toUpperCase();
+    const fromName = (vessel.fromLocationName || '').toUpperCase();
+    
+    // Check if coming from LS
+    if (fromCode === 'LS' || fromCode.includes('LS ') || fromName === 'LS') {
+      const toName = (vessel.toLocationName || '').toUpperCase();
+      const toCode = (vessel.toLocationShortCode || '').toUpperCase();
+      
+      const isVancouver = toName.includes('VANCOUVER') || toCode.includes('VAN');
+      const isPortland = toName.includes('PORTLAND') || toCode.includes('PDX');
+      
+      if (isVancouver || isPortland) {
+        try {
+          const date = new Date(vessel.orderTime);
+          if (!isNaN(date.getTime())) {
+            date.setHours(date.getHours() + 8);
+            return formatTime(date.toISOString());
+          }
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  };
+
   const SortIndicator = ({ column }: { column: SortKey }) => {
     if (sortConfig?.key !== column) return <span style={{ color: '#cbd5e1', marginLeft: '0.5rem' }}>↕</span>;
     return <span style={{ color: '#3b82f6', marginLeft: '0.5rem' }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
@@ -79,6 +106,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
             <tr>
               <th onClick={() => requestSort('status')}>Status <SortIndicator column="status" /></th>
               <th onClick={() => requestSort('orderTime')}>Set Time <SortIndicator column="orderTime" /></th>
+              <th>Est. Tie Up</th>
               <th onClick={() => requestSort('vessel.name')}>Vessel <SortIndicator column="vessel.name" /></th>
               <th>From</th>
               <th>To</th>
@@ -93,6 +121,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
                   </span>
                 </td>
                 <td style={{ color: '#64748b', fontSize: '0.8125rem' }}>{formatTime(vessel.orderTime)}</td>
+                <td style={{ color: '#0ea5e9', fontSize: '0.8125rem', fontWeight: 500 }}>{getEstimatedTieUpTime(vessel) || '-'}</td>
                 <td className="vessel-name">{vessel.vessel.name}</td>
                 <td>
                   <span className="port-code">{vessel.fromLocationShortCode}</span>
@@ -114,7 +143,14 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data }) => {
               <span className={`status-pill ${getStatusClass(vessel.status)}`}>
                 {vessel.status}
               </span>
-              <span className="card-time">{formatTime(vessel.orderTime)}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <span className="card-time">{formatTime(vessel.orderTime)}</span>
+                {getEstimatedTieUpTime(vessel) && (
+                  <span className="card-time" style={{ color: '#0ea5e9', fontWeight: 500, marginTop: '4px' }}>
+                    ETA: {getEstimatedTieUpTime(vessel)}
+                  </span>
+                )}
+              </div>
             </div>
             
             <h3 className="card-vessel-name">{vessel.vessel.name}</h3>
