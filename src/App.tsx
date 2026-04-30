@@ -103,21 +103,27 @@ function App() {
         {/* Stats Grid */}
         <div className="stats-grid">
           <div className="stats-card">
-            <div className="stats-icon stats-van">🚢</div>
+            <div className="stats-icon stats-van">
+              <img src="/img/port-round-logo-2.webp" alt="Vancouver Port" className="port-img" />
+            </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Vancouver']?.length || 0}</div>
               <div className="stats-label">Vancouver</div>
             </div>
           </div>
           <div className="stats-card">
-            <div className="stats-icon stats-pdx">⚓</div>
+            <div className="stats-icon stats-pdx">
+              <img src="/img/port-of-portland.PNG" alt="Portland Port" className="port-img" />
+            </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Portland']?.length || 0}</div>
               <div className="stats-label">Portland</div>
             </div>
           </div>
           <div className="stats-card">
-            <div className="stats-icon stats-cob">📍</div>
+            <div className="stats-icon stats-cob">
+              <img src="/img/port-of-longview.png" alt="Longview Port" className="port-img" />
+            </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Longview']?.length || 0}</div>
               <div className="stats-label">Longview</div>

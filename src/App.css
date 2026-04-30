@@ -122,9 +122,15 @@ header {
 }
 
 /* Specific Stats Icons */
-.stats-van { background: #eff6ff; color: #3b82f6; }
-.stats-pdx { background: #ecfdf5; color: #10b981; }
-.stats-cob { background: #fffbeb; color: #f59e0b; }
+.stats-van { background: #eff6ff; color: #3b82f6; overflow: hidden; }
+.stats-pdx { background: #ecfdf5; color: #10b981; overflow: hidden; }
+.stats-cob { background: #fffbeb; color: #f59e0b; overflow: hidden; }
+
+.port-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 /* Dashboard Card */
 .dashboard-card {
