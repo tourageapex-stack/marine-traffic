@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { VesselTraffic, MovementType } from '../services/api';
+import { getMarineTrafficLinkProps } from '../services/marineTraffic';
 
 interface VesselTableProps {
   data: VesselTraffic[];
@@ -101,6 +102,17 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     return <span style={{ color: '#3b82f6', marginLeft: '0.5rem' }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
+    const linkProps = getMarineTrafficLinkProps(vessel.vessel);
+    const name = vessel.vessel?.name || 'N/A';
+    if (!linkProps) return <>{name}</>;
+    return (
+      <a className="vessel-name-link" {...linkProps}>
+        {name}
+      </a>
+    );
+  };
+
   return (
     <div className="vessel-display-container">
       {/* Desktop Table View */}
@@ -132,7 +144,9 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
                     {getEstimatedTieUpTime(vessel) || '-'}
                   </td>
                 )}
-                <td className="vessel-name">{vessel.vessel?.name || 'N/A'}</td>
+                <td className="vessel-name">
+                  <VesselName vessel={vessel} />
+                </td>
                 <td>
                   <span className="port-code" title={vessel.fromLocationName}>{vessel.fromLocationShortCode || vessel.fromLocationName}</span>
                 </td>
@@ -147,8 +161,10 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
 
       {/* Mobile Card View */}
       <div className="mobile-only mobile-cards">
-        {sortedData.map((vessel, index) => (
-          <div className="vessel-card" key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}>
+        {sortedData.map((vessel, index) => {
+          const linkProps = getMarineTrafficLinkProps(vessel.vessel);
+          const card = (
+            <>
             <div className="card-header">
               <span className={`status-pill ${getStatusClass(vessel.status)}`}>
                 {vessel.status}
@@ -187,8 +203,27 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+            </>
+          );
+
+          if (linkProps) {
+            return (
+              <a
+                className="vessel-card vessel-card-link"
+                key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}
+                {...linkProps}
+              >
+                {card}
+              </a>
+            );
+          }
+
+          return (
+            <div className="vessel-card" key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}>
+              {card}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

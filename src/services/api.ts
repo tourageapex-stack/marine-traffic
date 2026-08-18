@@ -3,6 +3,7 @@ export interface Vessel {
   name: string;
   type?: string;
   imo?: string;
+  mmsi?: string | number | null;
 }
 
 export interface VesselTraffic {
@@ -69,7 +70,7 @@ const MOCK_DATA: VesselTraffic[] = [
   {
     status: "Confirmed",
     orderTime: new Date().toISOString(),
-    vessel: { name: "OCEAN VOYAGER" },
+    vessel: { name: "OCEAN VOYAGER", imo: "9592135" },
     fromLocationName: "ASTORIA PILOT STATION (LS)",
     toLocationName: "PORTLAND BERTH 601",
     fromLocationShortCode: "LS",
