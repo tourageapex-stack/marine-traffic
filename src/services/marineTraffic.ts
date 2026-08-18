@@ -37,9 +37,9 @@ export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string
 
 export function getMarineTrafficUrlFromSearchParams(params: URLSearchParams): string | null {
   return getMarineTrafficUrl({
-    imo: params.get('imo'),
-    mmsi: params.get('mmsi'),
-    name: params.get('name'),
+    imo: params.get('imo') ?? undefined,
+    mmsi: params.get('mmsi') ?? undefined,
+    name: params.get('name') ?? undefined,
   });
 }
 
