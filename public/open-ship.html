@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Opening ship…</title>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var imo = (params.get('imo') || '').replace(/\D/g, '');
+        var mmsi = (params.get('mmsi') || '').replace(/\D/g, '');
+        var name = (params.get('name') || '').trim();
+        var slug = name.replace(/\s+/g, '_').replace(/[^\w.-]/g, '');
+        var dest = '';
+
+        if (imo && imo !== '0') {
+          dest = 'https://www.marinetraffic.com/en/ais/details/ships/imo:' + encodeURIComponent(imo);
+          if (slug) dest += '/vessel:' + encodeURIComponent(slug);
+        } else if (mmsi && mmsi !== '0') {
+          dest = 'https://www.marinetraffic.com/en/ais/details/ships/mmsi:' + encodeURIComponent(mmsi);
+          if (slug) dest += '/vessel:' + encodeURIComponent(slug);
+        } else if (name) {
+          dest = 'https://www.marinetraffic.com/en/ais/index/search?keyword=' + encodeURIComponent(name);
+        }
+
+        if (dest) {
+          window.location.replace(dest);
+        } else {
+          window.location.replace('/');
+        }
+      })();
+    </script>
+  </head>
+  <body style="font-family: system-ui, sans-serif; color: #475569; padding: 2rem; text-align: center;">
+    Opening this ship in MarineTraffic…
+  </body>
+</html>
