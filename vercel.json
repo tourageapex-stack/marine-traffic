@@ -5,7 +5,7 @@
       "destination": "/api/proxy"
     },
     {
-      "source": "/((?!open-ship\\.html).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],

@@ -35,47 +35,8 @@ export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string
   return null;
 }
 
-export function getMarineTrafficUrlFromSearchParams(params: URLSearchParams): string | null {
-  return getMarineTrafficUrl({
-    imo: params.get('imo') ?? undefined,
-    mmsi: params.get('mmsi') ?? undefined,
-    name: params.get('name') ?? undefined,
-  });
-}
-
-const isIOS = () => /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-const isMobileDevice = () =>
-  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-export function getMarineTrafficLinkProps(vessel?: MarineTrafficVessel | null) {
-  const href = getMarineTrafficUrl(vessel);
-  if (!href || !vessel) return null;
-
-  // iOS Universal Links send every marinetraffic.com URL into the app,
-  // but the app does not open the ship from an IMO link. Go through our
-  // own page first so Safari can show the correct vessel page.
-  if (isIOS()) {
-    const query = new URLSearchParams();
-    const imo = digits(vessel.imo);
-    const mmsi = digits(vessel.mmsi);
-    const name = (vessel.name || '').trim();
-    if (imo) query.set('imo', imo);
-    if (mmsi) query.set('mmsi', mmsi);
-    if (name) query.set('name', name);
-
-    return {
-      href: `/open-ship.html?${query.toString()}`,
-      target: '_self' as const,
-      rel: 'noopener noreferrer' as const,
-      title: 'Open this ship in MarineTraffic',
-    };
-  }
-
-  return {
-    href,
-    target: isMobileDevice() ? '_self' : '_blank',
-    rel: 'noopener noreferrer' as const,
-    title: 'Open this ship in MarineTraffic',
-  };
+export function openMarineTrafficInNewTab(vessel?: MarineTrafficVessel | null) {
+  const url = getMarineTrafficUrl(vessel);
+  if (!url) return;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }

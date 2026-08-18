@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { VesselTraffic, MovementType } from '../services/api';
-import { getMarineTrafficLinkProps } from '../services/marineTraffic';
+import { getMarineTrafficUrl, openMarineTrafficInNewTab } from '../services/marineTraffic';
 
 interface VesselTableProps {
   data: VesselTraffic[];
@@ -103,13 +103,18 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
   };
 
   const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
-    const linkProps = getMarineTrafficLinkProps(vessel.vessel);
+    const url = getMarineTrafficUrl(vessel.vessel);
     const name = vessel.vessel?.name || 'N/A';
-    if (!linkProps) return <>{name}</>;
+    if (!url) return <>{name}</>;
     return (
-      <a className="vessel-name-link" {...linkProps}>
+      <button
+        type="button"
+        className="vessel-name-link"
+        title="Open this ship on MarineTraffic"
+        onClick={() => openMarineTrafficInNewTab(vessel.vessel)}
+      >
         {name}
-      </a>
+      </button>
     );
   };
 
@@ -162,7 +167,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
       {/* Mobile Card View */}
       <div className="mobile-only mobile-cards">
         {sortedData.map((vessel, index) => {
-          const linkProps = getMarineTrafficLinkProps(vessel.vessel);
+          const url = getMarineTrafficUrl(vessel.vessel);
           const card = (
             <>
             <div className="card-header">
@@ -206,15 +211,17 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
             </>
           );
 
-          if (linkProps) {
+          if (url) {
             return (
-              <a
+              <button
+                type="button"
                 className="vessel-card vessel-card-link"
                 key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}
-                {...linkProps}
+                title="Open this ship on MarineTraffic"
+                onClick={() => openMarineTrafficInNewTab(vessel.vessel)}
               >
                 {card}
-              </a>
+              </button>
             );
           }
 
