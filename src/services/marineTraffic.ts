@@ -35,8 +35,9 @@ export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string
   return null;
 }
 
-export function openMarineTrafficInNewTab(vessel?: MarineTrafficVessel | null) {
+/** Our bounce page, so phones stay in the browser instead of the MarineTraffic app. */
+export function getMarineTrafficBrowserUrl(vessel?: MarineTrafficVessel | null): string | null {
   const url = getMarineTrafficUrl(vessel);
-  if (!url) return;
-  window.open(url, '_blank', 'noopener,noreferrer');
+  if (!url) return null;
+  return `/open-ship.html?url=${encodeURIComponent(url)}`;
 }
