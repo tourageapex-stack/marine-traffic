@@ -175,8 +175,10 @@ function App() {
             onClick={() => setMovementType('tie-ups')}
           >
             <span className="toggle-btn-icon">⚓</span>
-            <span className="toggle-btn-label">Tie Ups</span>
-            <span className="toggle-btn-sub">Arrivals</span>
+            <span className="toggle-btn-text">
+              <span className="toggle-btn-label">Tie Ups</span>
+              <span className="toggle-btn-sub">Arrivals</span>
+            </span>
             <span className="toggle-badge">{totalTieUps}</span>
           </button>
           <button 
@@ -184,8 +186,10 @@ function App() {
             onClick={() => setMovementType('let-go')}
           >
             <span className="toggle-btn-icon">🚢</span>
-            <span className="toggle-btn-label">Let Go</span>
-            <span className="toggle-btn-sub">Departures</span>
+            <span className="toggle-btn-text">
+              <span className="toggle-btn-label">Let Go</span>
+              <span className="toggle-btn-sub">Departures</span>
+            </span>
             <span className="toggle-badge">{totalLetGos}</span>
           </button>
         </div>
