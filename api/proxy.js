@@ -6,7 +6,7 @@ export default async function handler(req, res) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': req.headers['user-agent'] || 'Marine-Traffic-Dashboard/1.0'
+        'User-Agent': req.headers['user-agent'] || 'River-Watch/1.0'
       }
     });
 

@@ -1,6 +1,6 @@
-# Marine Traffic Dashboard
+# River Watch
 
-A premium, enterprise-grade dashboard for monitoring real-time vessel traffic at the **Vancouver**, **Portland**, and **Longview** ports.
+Columbia River ship traffic dashboard for **Vancouver**, **Portland**, and **Longview**.
 
 ## ⚓ Features
 
@@ -39,4 +39,4 @@ This project is ready for one-click deployment to Vercel:
 3. Deploy! The API proxy will handle all cross-origin requests automatically.
 
 ---
-**Maintained by Marine Traffic Systems | 2026**
+**River Watch | 2026**

@@ -4,6 +4,7 @@ import type { VesselTraffic, MovementType } from './services/api';
 import { VesselTable } from './components/VesselTable';
 import { FeedbackPage } from './components/FeedbackPage';
 import { AnnouncementTile, ANNOUNCEMENTS } from './components/AnnouncementTile';
+import { UpdateNotice } from './components/UpdateNotice';
 import './App.css';
 
 type Page = 'dashboard' | 'feedback';
@@ -105,7 +106,7 @@ function App() {
     return (
       <div className="loading-container" style={{ background: '#f8fafc', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div className="loader" style={{ border: '4px solid #e2e8f0', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
-        <p style={{ marginTop: '1rem', color: '#64748b', fontWeight: 500 }}>Connecting to Marine Traffic System...</p>
+        <p style={{ marginTop: '1rem', color: '#64748b', fontWeight: 500 }}>Connecting to River Watch...</p>
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -129,9 +130,9 @@ function App() {
           >
             <h1>
               <span style={{ fontSize: '1.5rem' }}>⚓</span>
-              Marine Traffic
+              River Watch
             </h1>
-            <div className="header-subtitle">Vancouver, Portland & Longview Ports</div>
+            <div className="header-subtitle">Columbia River Ship Traffic</div>
           </div>
           
           <div className="refresh-section">
@@ -270,13 +271,14 @@ function App() {
       </main>
 
       <footer className="site-footer">
-        <p>© 2026 Marine Traffic Monitor | Data via ColRip Portal</p>
+        <p>© 2026 River Watch | Data via ColRip Portal</p>
         {page !== 'feedback' && (
           <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
             Give Feedback
           </button>
         )}
       </footer>
+      <UpdateNotice />
     </div>
   );
 }

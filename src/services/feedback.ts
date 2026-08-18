@@ -5,7 +5,7 @@ export interface FeedbackPayload {
   honey?: string;
 }
 
-const FEEDBACK_EMAIL = 'tourage.apex@gmail.com';
+const FORMSUBMIT_ID = 'c5352bf1db18cb77f845d103ce4a553b';
 
 export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
   const name = payload.name.trim();
@@ -20,7 +20,7 @@ export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
     throw new Error('Please enter a valid email address.');
   }
 
-  const response = await fetch(`https://formsubmit.co/ajax/${FEEDBACK_EMAIL}`, {
+  const response = await fetch(`https://formsubmit.co/ajax/${FORMSUBMIT_ID}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
       email,
       message,
       _honey: payload.honey || '',
-      _subject: `Marine Traffic feedback from ${name}`,
+      _subject: `River Watch feedback from ${name}`,
       _replyto: email,
       _template: 'table',
       _captcha: 'false',

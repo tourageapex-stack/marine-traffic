@@ -880,3 +880,65 @@ tr:hover td {
   font-weight: 700;
   margin-bottom: 1rem;
 }
+
+/* Update notice popup */
+.notice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.notice-dialog {
+  background: white;
+  border-radius: 12px;
+  padding: 1.75rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.notice-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2563eb;
+  margin-bottom: 0.4rem;
+}
+
+.notice-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+  background: none;
+  -webkit-text-fill-color: initial;
+}
+
+.notice-copy {
+  color: #475569;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.notice-button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.notice-button:hover {
+  background: #1d4ed8;
+}
