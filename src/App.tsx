@@ -1,8 +1,16 @@
 import { useEffect, useState, useMemo } from 'react';
-import { fetchVesselTraffic, filterByPorts } from './services/api';
-import type { VesselTraffic } from './services/api';
+import { fetchVesselTraffic, isPortMatch } from './services/api';
+import type { VesselTraffic, MovementType } from './services/api';
 import { VesselTable } from './components/VesselTable';
+import { FeedbackPage } from './components/FeedbackPage';
+import { AnnouncementTile, ANNOUNCEMENTS } from './components/AnnouncementTile';
 import './App.css';
+
+type Page = 'dashboard' | 'feedback';
+
+const getPageFromHash = (): Page => {
+  return window.location.hash.replace(/^#\/?/, '') === 'feedback' ? 'feedback' : 'dashboard';
+};
 
 function App() {
   const [data, setData] = useState<VesselTraffic[]>([]);
@@ -10,9 +18,11 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState('');
+  const [movementType, setMovementType] = useState<MovementType>('tie-ups');
   
-  const PORTS = ['Vancouver', 'Portland', 'Longview'];
-  const [activePort, setActivePort] = useState(PORTS[0]);
+  const PORTS = ['Vancouver', 'Portland', 'Longview'] as const;
+  const [activePort, setActivePort] = useState<string>(PORTS[0]);
+  const [page, setPage] = useState<Page>(getPageFromHash);
   
   const isMobile = useMemo(() => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -38,19 +48,42 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const filteredData = useMemo(() => filterByPorts(data, PORTS), [data]);
+  useEffect(() => {
+    const onHashChange = () => setPage(getPageFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const goTo = (next: Page) => {
+    window.location.hash = next === 'feedback' ? 'feedback' : '';
+    setPage(next);
+  };
+
+  // Compute total counts for badges
+  const totalTieUps = useMemo(() => {
+    return PORTS.reduce((sum, port) => {
+      return sum + data.filter(v => isPortMatch(v.toLocationName, v.toLocationShortCode, port)).length;
+    }, 0);
+  }, [data]);
+
+  const totalLetGos = useMemo(() => {
+    return PORTS.reduce((sum, port) => {
+      return sum + data.filter(v => isPortMatch(v.fromLocationName, v.fromLocationShortCode, port)).length;
+    }, 0);
+  }, [data]);
 
   const portGroups = useMemo(() => {
     return PORTS.reduce((acc, port) => {
-      acc[port] = filteredData.filter(item => {
-        const to = item.toLocationName?.toLowerCase() || '';
-        const toShort = item.toLocationShortCode?.toLowerCase() || '';
-        const searchPort = port.toLowerCase();
-        return to.includes(searchPort) || toShort.includes(searchPort);
+      acc[port] = data.filter(item => {
+        if (movementType === 'tie-ups') {
+          return isPortMatch(item.toLocationName, item.toLocationShortCode, port);
+        } else {
+          return isPortMatch(item.fromLocationName, item.fromLocationShortCode, port);
+        }
       });
       return acc;
     }, {} as Record<string, VesselTraffic[]>);
-  }, [filteredData]);
+  }, [data, movementType]);
 
   // Search filtering logic
   const searchFilteredVessels = useMemo(() => {
@@ -59,14 +92,16 @@ function App() {
     
     const term = searchTerm.toLowerCase();
     return activeVessels.filter(v => 
-      v.vessel.name.toLowerCase().includes(term) ||
-      v.fromLocationName.toLowerCase().includes(term) ||
-      v.toLocationName.toLowerCase().includes(term) ||
-      v.status.toLowerCase().includes(term)
+      (v.vessel?.name || '').toLowerCase().includes(term) ||
+      (v.fromLocationName || '').toLowerCase().includes(term) ||
+      (v.fromLocationShortCode || '').toLowerCase().includes(term) ||
+      (v.toLocationName || '').toLowerCase().includes(term) ||
+      (v.toLocationShortCode || '').toLowerCase().includes(term) ||
+      (v.status || '').toLowerCase().includes(term)
     );
   }, [portGroups, activePort, searchTerm]);
 
-  if (loading && data.length === 0) {
+  if (page !== 'feedback' && loading && data.length === 0) {
     return (
       <div className="loading-container" style={{ background: '#f8fafc', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div className="loader" style={{ border: '4px solid #e2e8f0', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
@@ -80,7 +115,18 @@ function App() {
     <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
       <header>
         <div className="header-content">
-          <div className="header-title-group">
+          <div
+            className="header-title-group"
+            onClick={() => goTo('dashboard')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                goTo('dashboard');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
             <h1>
               <span style={{ fontSize: '1.5rem' }}>⚓</span>
               Marine Traffic
@@ -89,17 +135,60 @@ function App() {
           </div>
           
           <div className="refresh-section">
-            <div className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</div>
-            <button className="refresh-button" onClick={() => loadData()}>
-               <span>🔄</span> Refresh
-            </button>
+            {page === 'feedback' ? (
+              <button className="refresh-button" onClick={() => goTo('dashboard')}>
+                ← Dashboard
+              </button>
+            ) : (
+              <>
+                <div className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</div>
+                <button className="refresh-button" onClick={() => loadData()}>
+                  <span>🔄</span> Refresh
+                </button>
+                <button className="feedback-button" onClick={() => goTo('feedback')}>
+                  Give Feedback
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
       
-      {error && <div className="error-message" style={{ margin: '1rem 2rem' }}>⚠️ {error}</div>}
+      {page !== 'feedback' && error && <div className="error-message" style={{ margin: '1rem 2rem' }}>⚠️ {error}</div>}
 
       <main className="main-content">
+        {page === 'feedback' ? (
+          <FeedbackPage onBack={() => goTo('dashboard')} />
+        ) : (
+          <>
+        <div className="announcement-row">
+          {ANNOUNCEMENTS.map(announcement => (
+            <AnnouncementTile key={announcement.id} announcement={announcement} />
+          ))}
+        </div>
+
+        {/* Movement Type Toggle Banner */}
+        <div className="movement-toggle-container">
+          <button 
+            className={`movement-toggle-btn ${movementType === 'tie-ups' ? 'active' : ''}`}
+            onClick={() => setMovementType('tie-ups')}
+          >
+            <span className="toggle-btn-icon">⚓</span>
+            <span className="toggle-btn-label">Tie Ups</span>
+            <span className="toggle-btn-sub">Arrivals</span>
+            <span className="toggle-badge">{totalTieUps}</span>
+          </button>
+          <button 
+            className={`movement-toggle-btn ${movementType === 'let-go' ? 'active' : ''}`}
+            onClick={() => setMovementType('let-go')}
+          >
+            <span className="toggle-btn-icon">🚢</span>
+            <span className="toggle-btn-label">Let Go</span>
+            <span className="toggle-btn-sub">Departures</span>
+            <span className="toggle-badge">{totalLetGos}</span>
+          </button>
+        </div>
+
         {/* Stats Grid */}
         <div className="stats-grid">
           <div className="stats-card">
@@ -108,7 +197,9 @@ function App() {
             </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Vancouver']?.length || 0}</div>
-              <div className="stats-label">Vancouver</div>
+              <div className="stats-label">
+                Vancouver <span className="stats-mode-tag">{movementType === 'tie-ups' ? 'Tie Ups' : 'Let Go'}</span>
+              </div>
             </div>
           </div>
           <div className="stats-card">
@@ -117,7 +208,9 @@ function App() {
             </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Portland']?.length || 0}</div>
-              <div className="stats-label">Portland</div>
+              <div className="stats-label">
+                Portland <span className="stats-mode-tag">{movementType === 'tie-ups' ? 'Tie Ups' : 'Let Go'}</span>
+              </div>
             </div>
           </div>
           <div className="stats-card">
@@ -126,7 +219,9 @@ function App() {
             </div>
             <div className="stats-info">
               <div className="stats-count">{portGroups['Longview']?.length || 0}</div>
-              <div className="stats-label">Longview</div>
+              <div className="stats-label">
+                Longview <span className="stats-mode-tag">{movementType === 'tie-ups' ? 'Tie Ups' : 'Let Go'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -151,7 +246,7 @@ function App() {
               <span className="search-icon">🔍</span>
               <input 
                 type="text" 
-                placeholder="Search vessels by name, port, or status..." 
+                placeholder={`Search ${movementType === 'tie-ups' ? 'tie ups' : 'let gos'} by vessel, berth, or status...`}
                 className="search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -161,22 +256,30 @@ function App() {
 
           <div className="table-wrapper">
             {searchFilteredVessels.length > 0 ? (
-              <VesselTable data={searchFilteredVessels} />
+              <VesselTable data={searchFilteredVessels} movementType={movementType} />
             ) : (
               <div className="empty-state" style={{ padding: '4rem 2rem', textAlign: 'center', color: '#94a3b8' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚢</div>
-                <div>No vessels match your search "{searchTerm}" in {activePort}.</div>
+                <div>No {movementType === 'tie-ups' ? 'tie ups' : 'let gos'} match your search "{searchTerm}" in {activePort}.</div>
               </div>
             )}
           </div>
         </div>
+          </>
+        )}
       </main>
 
-      <footer style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.8125rem' }}>
+      <footer className="site-footer">
         <p>© 2026 Marine Traffic Monitor | Data via ColRip Portal</p>
+        {page !== 'feedback' && (
+          <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
+            Give Feedback
+          </button>
+        )}
       </footer>
     </div>
   );
 }
 
 export default App;
+
