@@ -80,7 +80,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
       const toCode = (vessel.toLocationShortCode || '').toUpperCase();
       
       const isVancouver = toName.includes('VANCOUVER') || toCode.includes('VAN') || toCode.startsWith('VU') || toCode.startsWith('VL') || toCode === 'UGC';
-      const isPortland = toName.includes('PORTLAND') || toCode.includes('PDX') || ['204','206','312','314','411','601','603','605','607','DD5','DD6','COL','ASHGR','USG'].includes(toCode);
+      const isPortland = toName.includes('PORTLAND') || toName.includes('GLACIER NORTHWEST') || toCode.includes('PDX') || ['204','206','312','314','411','601','603','605','607','DD5','DD6','COL','ASHGR','USG','GLACR'].includes(toCode);
       
       if (isVancouver || isPortland) {
         try {

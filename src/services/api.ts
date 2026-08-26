@@ -32,22 +32,21 @@ export const isPortMatch = (name?: string, code?: string, port: string = ''): bo
       c.startsWith('vu') ||
       c.startsWith('vl') ||
       c === 'ugc' ||
-      c === 'glacr' ||
       c === 'relvl' ||
       c === 'vnbuoy' ||
-      n.includes('united grain') ||
-      n.includes('glacier northwest')
+      n.includes('united grain')
     );
   }
   if (p === 'portland') {
     return (
       n.includes('portland') ||
       c.includes('pdx') ||
-      ['204', '206', '312', '314', '411', '601', '603', '605', '607', 'dd5', 'dd6', 'col', 'ashgr', 'usg'].includes(c) ||
+      ['204', '206', '312', '314', '411', '601', '603', '605', '607', 'dd5', 'dd6', 'col', 'ashgr', 'usg', 'glacr'].includes(c) ||
       n.includes('swan isl') ||
       n.includes('columbia grain') ||
       n.includes('ashgrove') ||
-      n.includes('us gypsum')
+      n.includes('us gypsum') ||
+      n.includes('glacier northwest')
     );
   }
   if (p === 'longview') {
