@@ -3,7 +3,6 @@ import { fetchVesselTraffic, isPortMatch } from './services/api';
 import type { VesselTraffic, MovementType } from './services/api';
 import { VesselTable } from './components/VesselTable';
 import { FeedbackPage } from './components/FeedbackPage';
-import { AnnouncementTile, ANNOUNCEMENTS } from './components/AnnouncementTile';
 import { UpdateNotice } from './components/UpdateNotice';
 import './App.css';
 
@@ -162,12 +161,6 @@ function App() {
           <FeedbackPage onBack={() => goTo('dashboard')} />
         ) : (
           <>
-        <div className="announcement-row">
-          {ANNOUNCEMENTS.map(announcement => (
-            <AnnouncementTile key={announcement.id} announcement={announcement} />
-          ))}
-        </div>
-
         {/* Movement Type Toggle Banner */}
         <div className="movement-toggle-container">
           <button 
