@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { adminApiPlugin } from './plugins/admin-api.ts'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), adminApiPlugin()],
   server: {
     proxy: {
       '/vessel-data-api': {
