@@ -1350,7 +1350,10 @@ button.vessel-card-link:hover {
   background: #ea580c;
 }
 
-.app-container[data-theme="fall"] .announcement-kicker,
+.app-container[data-theme="fall"] .announcement-kicker {
+  color: #fdba74;
+}
+
 .app-container[data-theme="fall"] .announcement-cta {
   color: #431407;
 }

@@ -230,6 +230,11 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
           <div className="admin-kicker">River Watch</div>
           <h2 className="admin-title">Admin</h2>
           <p className="admin-copy">Add announcements and switch seasonal themes. More extras can land here later.</p>
+          {draft.persistence === 'ephemeral' && (
+            <p className="admin-muted">
+              This host may forget settings after a cold start. Add a Vercel Blob store to keep them for every visitor.
+            </p>
+          )}
         </div>
         <button className="admin-ghost-button" type="button" onClick={handleLogout}>
           Sign out
@@ -237,13 +242,37 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
       </div>
 
       <nav className="admin-tabs" aria-label="Admin sections">
-        <button className={`tab-pill ${tab === 'announcements' ? 'active' : ''}`} type="button" onClick={() => setTab('announcements')}>
+        <button
+          className={`tab-pill ${tab === 'announcements' ? 'active' : ''}`}
+          type="button"
+          onClick={() => {
+            setTab('announcements');
+            setStatus(null);
+            setError(null);
+          }}
+        >
           Announcements
         </button>
-        <button className={`tab-pill ${tab === 'themes' ? 'active' : ''}`} type="button" onClick={() => setTab('themes')}>
+        <button
+          className={`tab-pill ${tab === 'themes' ? 'active' : ''}`}
+          type="button"
+          onClick={() => {
+            setTab('themes');
+            setStatus(null);
+            setError(null);
+          }}
+        >
           Themes
         </button>
-        <button className={`tab-pill ${tab === 'site' ? 'active' : ''}`} type="button" onClick={() => setTab('site')}>
+        <button
+          className={`tab-pill ${tab === 'site' ? 'active' : ''}`}
+          type="button"
+          onClick={() => {
+            setTab('site');
+            setStatus(null);
+            setError(null);
+          }}
+        >
           Site extras
         </button>
       </nav>
