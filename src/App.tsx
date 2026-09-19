@@ -128,7 +128,13 @@ function App() {
             tabIndex={0}
           >
             <h1>
-              <span style={{ fontSize: '1.5rem' }}>⚓</span>
+              <img
+                src="/img/river-watch-mark.svg"
+                alt=""
+                className="brand-mark"
+                width={36}
+                height={36}
+              />
               River Watch
             </h1>
             <div className="header-subtitle">Columbia River Ship Traffic</div>

@@ -1,26 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="River Watch">
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 512 512" role="img" aria-label="River Watch">
   <defs>
     <clipPath id="inside-rope">
       <circle cx="256" cy="256" r="160"/>
     </clipPath>
-    <!-- Soft rope braid via repeating dashed overlays -->
-    <path id="rope-path" d="M256,81 A175,175 0 1 1 255.9,81"/>
   </defs>
 
-  <!-- Squircle -->
-  <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="#233045"/>
-  <rect x="18.5" y="18.5" width="475" height="475" rx="105.5" ry="105.5"
-        fill="none" stroke="#F1F5F9" stroke-width="5"/>
+  <circle cx="256" cy="256" r="198" fill="#233045"/>
 
   <!-- Rope base -->
   <circle cx="256" cy="256" r="175" fill="none" stroke="#C4A57A" stroke-width="26"/>
-  <!-- Rope outer/inner polish -->
   <circle cx="256" cy="256" r="187.5" fill="none" stroke="#6E5336" stroke-width="1.75" opacity="0.4"/>
   <circle cx="256" cy="256" r="162.5" fill="none" stroke="#6E5336" stroke-width="1.75" opacity="0.35"/>
-  <!-- Highlight -->
   <circle cx="256" cy="256" r="172" fill="none" stroke="#E6D0AE" stroke-width="3" opacity="0.4"/>
-  <!-- Braid: short dashes along the ring (two interleaved dashed strokes) -->
   <circle cx="256" cy="256" r="175" fill="none" stroke="#6E5336" stroke-width="10"
           stroke-dasharray="6 14" stroke-linecap="round" opacity="0.55"
           transform="rotate(8 256 256)"/>
@@ -29,8 +21,6 @@
           transform="rotate(-4 256 256)"/>
 
   <g clip-path="url(#inside-rope)">
-    <!-- Ship silhouette (river freighter), smooth stepped profile facing right -->
-    <!-- Freighter silhouette facing right -->
     <path fill="#FFFFFF" d="
       M152 276
       L168 252
@@ -59,16 +49,13 @@
       L468 252
       L458 276
       Z"/>
-    <!-- Mast + pennant -->
     <rect x="350" y="128" width="4.5" height="48" rx="1.2" fill="#FFFFFF"/>
     <path fill="#FFFFFF" d="M354.5 132 L376 142 L354.5 150 Z"/>
-    <!-- Cabin windows -->
     <rect x="310" y="220" width="9" height="7" rx="1.5" fill="#233045"/>
     <rect x="324" y="220" width="9" height="7" rx="1.5" fill="#233045"/>
     <rect x="338" y="220" width="9" height="7" rx="1.5" fill="#233045"/>
     <circle cx="356" cy="223.5" r="3.6" fill="#233045"/>
 
-    <!-- Three wave strokes -->
     <path fill="none" stroke="#A8CDE3" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"
           d="M170 296 C190 286, 210 306, 230 296 S270 286, 290 296 S330 306, 350 296"/>
     <path fill="none" stroke="#7AAFC9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"

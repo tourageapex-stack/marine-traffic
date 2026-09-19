@@ -39,6 +39,14 @@ header {
   gap: 0.75rem;
 }
 
+.brand-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  display: block;
+  border-radius: 50%;
+}
+
 .header-subtitle {
   font-size: 0.75rem;
   color: #94a3b8;
