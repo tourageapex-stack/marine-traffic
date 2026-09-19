@@ -128,7 +128,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     setCopiedName(value);
     window.setTimeout(() => {
       setCopiedName((current) => (current === value ? null : current));
-    }, 2000);
+    }, 3000);
   };
 
   const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
