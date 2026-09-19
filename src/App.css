@@ -39,6 +39,15 @@ header {
   gap: 0.75rem;
 }
 
+.app-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
 .header-subtitle {
   font-size: 0.75rem;
   color: #94a3b8;
@@ -516,6 +525,11 @@ button.vessel-card-link .card-vessel-name {
 @media (max-width: 768px) {
   header {
     padding: 0.75rem 1rem;
+  }
+
+  .app-logo {
+    width: 32px;
+    height: 32px;
   }
 
   .header-content {
