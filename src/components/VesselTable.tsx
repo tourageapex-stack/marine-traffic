@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { VesselTraffic, MovementType } from '../services/api';
 
 const copyText = async (text: string) => {
@@ -127,7 +128,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     setCopiedName(value);
     window.setTimeout(() => {
       setCopiedName((current) => (current === value ? null : current));
-    }, 1600);
+    }, 2000);
   };
 
   const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
@@ -261,9 +262,11 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
         })}
       </div>
 
-      {copiedName && (
-        <div className="copy-toast" role="status">Copied {copiedName}</div>
-      )}
+      {copiedName &&
+        createPortal(
+          <div className="copy-toast" role="status">Copied {copiedName}</div>,
+          document.body
+        )}
     </div>
   );
 };
