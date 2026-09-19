@@ -4,14 +4,20 @@ export interface MarineTrafficVessel {
   mmsi?: string | number | null;
 }
 
-const ANDROID_PACKAGE = 'com.marinetraffic.android';
-
 const slugifyVesselName = (name: string) =>
   name.trim().replace(/\s+/g, '_').replace(/[^\w.-]/g, '');
 
 const digits = (value: string | number | null | undefined) => {
   const raw = String(value ?? '').replace(/\D/g, '');
   return raw && raw !== '0' ? raw : '';
+};
+
+const isMobileOS = () => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  // iPadOS Safari reports a macOS user agent, so touch support is the only tell.
+  const isIpadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  return /Android|iPhone|iPad|iPod/i.test(ua) || isIpadOS;
 };
 
 export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string | null {
@@ -38,17 +44,15 @@ export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string
 }
 
 /**
- * Android browsers ignore the app links on marinetraffic.com often enough that the
- * plain https URL is unreliable, so hand Chrome an intent it can route to the app
- * with the website as its own fallback. iOS and desktop stay on the https URL:
- * universal links open the app there when it is installed.
+ * On a phone, tapping a marinetraffic.com link opens the MarineTraffic app
+ * (its apple-app-site-association and assetlinks.json claim every path on the
+ * domain). The app only resolves links carrying MarineTraffic's internal
+ * shipid, which the pilot feed does not give us, so an IMO link drops the user
+ * on the app home screen with no vessel. Sending the tap through our own
+ * redirect keeps it in the browser, which does follow IMO to the right vessel.
  */
-export function getMarineTrafficAppUrl(vessel?: MarineTrafficVessel | null): string | null {
-  if (typeof navigator === 'undefined' || !/Android/i.test(navigator.userAgent)) return null;
-
+export function getMarineTrafficHref(vessel?: MarineTrafficVessel | null): string | null {
   const url = getMarineTrafficUrl(vessel);
   if (!url) return null;
-
-  const fallback = encodeURIComponent(url);
-  return `intent://${url.replace(/^https:\/\//, '')}#Intent;scheme=https;package=${ANDROID_PACKAGE};S.browser_fallback_url=${fallback};end`;
+  return isMobileOS() ? `/api/marinetraffic?url=${encodeURIComponent(url)}` : url;
 }

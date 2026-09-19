@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { VesselTraffic, MovementType } from '../services/api';
-import { getMarineTrafficAppUrl, getMarineTrafficUrl } from '../services/marineTraffic';
+import { getMarineTrafficHref } from '../services/marineTraffic';
 
 const copyText = async (text: string) => {
   try {
@@ -132,15 +132,6 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     }, 3000);
   };
 
-  const openMarineTraffic = (event: React.MouseEvent<HTMLAnchorElement>, vessel: VesselTraffic) => {
-    event.stopPropagation();
-    const appUrl = getMarineTrafficAppUrl(vessel.vessel);
-    if (appUrl) {
-      event.preventDefault();
-      window.location.assign(appUrl);
-    }
-  };
-
   const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
     const name = vessel.vessel?.name || 'N/A';
     if (name === 'N/A') return <>{name}</>;
@@ -207,7 +198,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
         {sortedData.map((vessel, index) => {
           const name = vessel.vessel?.name || 'N/A';
           const canCopy = name !== 'N/A';
-          const marineTrafficUrl = getMarineTrafficUrl(vessel.vessel);
+          const marineTrafficUrl = getMarineTrafficHref(vessel.vessel);
           const card = (
             <>
             <div className="card-header">
@@ -257,7 +248,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Open this ship on MarineTraffic"
-                  onClick={(e) => openMarineTraffic(e, vessel)}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <span aria-hidden="true">🛰️</span> Track on MarineTraffic
                 </a>
