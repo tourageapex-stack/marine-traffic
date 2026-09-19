@@ -48,8 +48,8 @@ export function getMarineTrafficUrl(vessel?: MarineTrafficVessel | null): string
  * (its apple-app-site-association and assetlinks.json claim every path on the
  * domain). The app only resolves links carrying MarineTraffic's internal
  * shipid, which the pilot feed does not give us, so an IMO link drops the user
- * on the app home screen with no vessel. Sending the tap through our own
- * redirect keeps it in the browser, which does follow IMO to the right vessel.
+ * on the app home screen with no vessel. Sending the tap to our own handoff
+ * page keeps it in the browser, which does follow IMO to the right vessel.
  */
 export function getMarineTrafficHref(vessel?: MarineTrafficVessel | null): string | null {
   const url = getMarineTrafficUrl(vessel);

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolveTarget } from './api/marinetraffic.js'
+import { renderHandoffPage, resolveTarget } from './api/marinetraffic.js'
 
 // Mirrors the /api/marinetraffic serverless function so `npm run dev` behaves
 // like production.
@@ -19,9 +19,9 @@ const marineTrafficRedirect = (): Plugin => ({
         return
       }
 
-      res.statusCode = 302
-      res.setHeader('Location', target)
-      res.end()
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
+      res.end(renderHandoffPage(target))
     })
   },
 })
