@@ -129,9 +129,9 @@ function App() {
           >
             <h1>
               <img
-                src="/img/river-watch-mark.svg"
+                src="/img/river-watch-logo.png"
                 alt=""
-                className="brand-mark"
+                className="app-logo"
                 width={36}
                 height={36}
               />
