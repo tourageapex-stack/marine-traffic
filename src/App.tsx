@@ -3,13 +3,22 @@ import { fetchVesselTraffic, isPortMatch } from './services/api';
 import type { VesselTraffic, MovementType } from './services/api';
 import { VesselTable } from './components/VesselTable';
 import { FeedbackPage } from './components/FeedbackPage';
+import { AdminPage } from './components/AdminPage';
+import { AnnouncementTile } from './components/AnnouncementTile';
 import { UpdateNotice } from './components/UpdateNotice';
+import { DEFAULT_SETTINGS, THEMES, fetchSiteSettings, type SiteSettings } from './services/siteSettings';
 import './App.css';
 
-type Page = 'dashboard' | 'feedback';
+type Page = 'dashboard' | 'feedback' | 'admin';
 
-const getPageFromHash = (): Page => {
-  return window.location.hash.replace(/^#\/?/, '') === 'feedback' ? 'feedback' : 'dashboard';
+const getPageFromLocation = (): Page => {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  if (path === '/admin') return 'admin';
+
+  const hash = window.location.hash.replace(/^#\/?/, '');
+  if (hash === 'feedback') return 'feedback';
+  if (hash === 'admin') return 'admin';
+  return 'dashboard';
 };
 
 function App() {
@@ -22,7 +31,8 @@ function App() {
   
   const PORTS = ['Vancouver', 'Portland', 'Longview'] as const;
   const [activePort, setActivePort] = useState<string>(PORTS[0]);
-  const [page, setPage] = useState<Page>(getPageFromHash);
+  const [page, setPage] = useState<Page>(getPageFromLocation);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   
   const isMobile = useMemo(() => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -49,15 +59,48 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const onHashChange = () => setPage(getPageFromHash());
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    fetchSiteSettings()
+      .then(setSiteSettings)
+      .catch(() => {
+        // Keep defaults if the settings API is unavailable.
+      });
+  }, []);
+
+  useEffect(() => {
+    const syncPage = () => setPage(getPageFromLocation());
+    window.addEventListener('hashchange', syncPage);
+    window.addEventListener('popstate', syncPage);
+    return () => {
+      window.removeEventListener('hashchange', syncPage);
+      window.removeEventListener('popstate', syncPage);
+    };
   }, []);
 
   const goTo = (next: Page) => {
-    window.location.hash = next === 'feedback' ? 'feedback' : '';
-    setPage(next);
+    if (next === 'admin') {
+      window.history.pushState({}, '', '/admin');
+      setPage('admin');
+      return;
+    }
+
+    if (next === 'feedback') {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      window.location.hash = 'feedback';
+      setPage('feedback');
+      return;
+    }
+
+    if (window.location.pathname !== '/' || window.location.hash) {
+      window.history.pushState({}, '', '/');
+    }
+    setPage('dashboard');
   };
+
+  const publishedAnnouncements = siteSettings.announcements.filter((item) => item.published);
+  const themeMark = THEMES.find((theme) => theme.id === siteSettings.theme)?.mark;
+  const headerSubtitle = siteSettings.subtitle.trim() || 'Columbia River Ship Traffic';
 
   // Compute total counts for badges
   const totalTieUps = useMemo(() => {
@@ -101,7 +144,7 @@ function App() {
     );
   }, [portGroups, activePort, searchTerm]);
 
-  if (page !== 'feedback' && loading && data.length === 0) {
+  if (page === 'dashboard' && loading && data.length === 0) {
     return (
       <div className="loading-container" style={{ background: '#f8fafc', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div className="loader" style={{ border: '4px solid #e2e8f0', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite' }}></div>
@@ -112,7 +155,7 @@ function App() {
   }
 
   return (
-    <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
+    <div className={`app-container ${isMobile ? 'mobile' : ''}`} data-theme={siteSettings.theme}>
       <header>
         <div className="header-content">
           <div
@@ -128,18 +171,14 @@ function App() {
             tabIndex={0}
           >
             <h1>
-              <span style={{ fontSize: '1.5rem' }}>⚓</span>
+              <span style={{ fontSize: '1.5rem' }}>{themeMark || '⚓'}</span>
               River Watch
             </h1>
-            <div className="header-subtitle">Columbia River Ship Traffic</div>
+            <div className="header-subtitle">{headerSubtitle}</div>
           </div>
           
           <div className="refresh-section">
-            {page === 'feedback' ? (
-              <button className="refresh-button" onClick={() => goTo('dashboard')}>
-                ← Dashboard
-              </button>
-            ) : (
+            {page === 'dashboard' ? (
               <>
                 <div className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</div>
                 <button className="refresh-button" onClick={() => loadData()}>
@@ -149,18 +188,36 @@ function App() {
                   Give Feedback
                 </button>
               </>
+            ) : (
+              <button className="refresh-button" onClick={() => goTo('dashboard')}>
+                ← Dashboard
+              </button>
             )}
           </div>
         </div>
       </header>
+
+      {page === 'dashboard' && siteSettings.banner.trim() && (
+        <div className="site-banner">{siteSettings.banner.trim()}</div>
+      )}
       
-      {page !== 'feedback' && error && <div className="error-message" style={{ margin: '1rem 2rem' }}>⚠️ {error}</div>}
+      {page === 'dashboard' && error && <div className="error-message" style={{ margin: '1rem 2rem' }}>⚠️ {error}</div>}
 
       <main className="main-content">
         {page === 'feedback' ? (
           <FeedbackPage onBack={() => goTo('dashboard')} />
+        ) : page === 'admin' ? (
+          <AdminPage settings={siteSettings} onSettingsChange={setSiteSettings} />
         ) : (
           <>
+        {publishedAnnouncements.length > 0 && (
+          <div className="announcement-row">
+            {publishedAnnouncements.map((announcement) => (
+              <AnnouncementTile key={announcement.id} announcement={announcement} />
+            ))}
+          </div>
+        )}
+
         {/* Movement Type Toggle Banner */}
         <div className="movement-toggle-container">
           <button 
@@ -269,9 +326,14 @@ function App() {
 
       <footer className="site-footer">
         <p>© 2026 River Watch | Data via ColRip Portal</p>
-        {page !== 'feedback' && (
+        {page === 'dashboard' && (
           <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
             Give Feedback
+          </button>
+        )}
+        {page !== 'admin' && (
+          <button className="footer-admin-link" onClick={() => goTo('admin')}>
+            Admin
           </button>
         )}
       </footer>
