@@ -461,6 +461,28 @@ button.vessel-card-link:hover {
   border-color: #cbd5e1;
 }
 
+button.vessel-card-link .card-vessel-name {
+  border-bottom: 1px dashed #94a3b8;
+  align-self: flex-start;
+}
+
+.copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: #0f172a;
+  color: white;
+  padding: 0.625rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* Port Badges - Compact */
 .port-code {
   font-size: 0.7rem;
