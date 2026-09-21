@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { VesselTraffic, MovementType } from '../services/api';
+import { getMarineTrafficHref } from '../services/marineTraffic';
 
 const copyText = async (text: string) => {
   try {
@@ -197,6 +198,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
         {sortedData.map((vessel, index) => {
           const name = vessel.vessel?.name || 'N/A';
           const canCopy = name !== 'N/A';
+          const marineTrafficUrl = getMarineTrafficHref(vessel.vessel);
           const card = (
             <>
             <div className="card-header">
@@ -237,20 +239,43 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
                 </div>
               </div>
             </div>
+
+            {marineTrafficUrl && (
+              <div className="card-actions">
+                <a
+                  className="track-link"
+                  href={marineTrafficUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open this ship on MarineTraffic"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span aria-hidden="true">🛰️</span> Track on MarineTraffic
+                </a>
+              </div>
+            )}
             </>
           );
 
           if (canCopy) {
             return (
-              <button
-                type="button"
+              <div
                 className="vessel-card vessel-card-link"
                 key={`${name}-card-${index}`}
+                role="button"
+                tabIndex={0}
                 title="Copy ship name"
                 onClick={() => copyVesselName(name)}
+                onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return;
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    copyVesselName(name);
+                  }
+                }}
               >
                 {card}
-              </button>
+              </div>
             );
           }
 

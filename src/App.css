@@ -479,7 +479,7 @@ tr:hover td {
   border-bottom-color: #2563eb;
 }
 
-button.vessel-card-link {
+.vessel-card-link {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -490,12 +490,17 @@ button.vessel-card-link {
   cursor: pointer;
 }
 
-button.vessel-card-link:hover {
+.vessel-card-link:hover {
   transform: translateY(-1px);
   border-color: #cbd5e1;
 }
 
-button.vessel-card-link .card-vessel-name {
+.vessel-card-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.vessel-card-link .card-vessel-name {
   border-bottom: 1px dashed #94a3b8;
   align-self: flex-start;
 }
@@ -756,6 +761,38 @@ button.vessel-card-link .card-vessel-name {
   font-weight: 600;
   color: #334155;
   flex: 1;
+}
+
+.card-actions {
+  display: flex;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.track-link {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.track-link:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.track-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
 .card-footer {
