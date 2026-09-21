@@ -1,0 +1,13 @@
+{
+  "theme": "default",
+  "banner": "",
+  "subtitle": "",
+  "announcements": [],
+  "popup": {
+    "enabled": false,
+    "title": "",
+    "body": "",
+    "cta": "",
+    "href": ""
+  }
+}
