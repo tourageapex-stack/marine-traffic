@@ -4,6 +4,7 @@ import type { VesselTraffic, MovementType } from './services/api';
 import { VesselTable } from './components/VesselTable';
 import { FeedbackPage } from './components/FeedbackPage';
 import { UpdateNotice } from './components/UpdateNotice';
+import { AddToHomeScreen } from './components/AddToHomeScreen';
 import './App.css';
 
 type Page = 'dashboard' | 'feedback';
@@ -151,6 +152,7 @@ function App() {
                 <button className="refresh-button" onClick={() => loadData()}>
                   <span>🔄</span> Refresh
                 </button>
+                <AddToHomeScreen />
                 <button className="feedback-button" onClick={() => goTo('feedback')}>
                   Give Feedback
                 </button>
