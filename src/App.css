@@ -98,6 +98,32 @@ header {
   background: #1d4ed8;
 }
 
+.add-home-button {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.add-home-steps {
+  margin: 0 0 1.5rem;
+  padding-left: 1.25rem;
+  color: #475569;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.add-home-steps li + li {
+  margin-top: 0.65rem;
+}
+
+.add-home-share-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -0.15em;
+  color: #2563eb;
+  margin: 0 0.1rem;
+}
+
 .site-footer {
   padding: 2rem;
   text-align: center;
@@ -545,7 +571,8 @@ button.vessel-card-link .card-vessel-name {
     width: 100%;
   }
 
-  .feedback-button {
+  .feedback-button,
+  .add-home-button {
     width: 100%;
     justify-content: center;
   }
