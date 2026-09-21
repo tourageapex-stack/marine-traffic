@@ -6,13 +6,14 @@ import {
   adminLogout,
   emptyAnnouncement,
   fetchAdminSession,
+  generateAnnouncementArt,
   saveSiteSettings,
   type Announcement,
   type SiteSettings,
   type SiteTheme,
 } from '../services/siteSettings';
 
-type AdminTab = 'announcements' | 'themes' | 'site';
+type AdminTab = 'announcements' | 'themes' | 'popup' | 'site';
 
 interface AdminPageProps {
   settings: SiteSettings;
@@ -38,6 +39,7 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
   const [form, setForm] = useState<Announcement>(blankForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingArt, setGeneratingArt] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +70,9 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
       kicker: form.kicker.trim() || 'Upcoming event',
     };
   }, [form]);
+
+  const seasonThemes = THEMES.filter((theme) => theme.group === 'season');
+  const holidayThemes = THEMES.filter((theme) => theme.group === 'holiday');
 
   const persist = async (next: SiteSettings, message: string) => {
     setSaving(true);
@@ -126,6 +131,7 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
       kicker: form.kicker.trim() || 'Announcement',
       logo: form.logo.trim(),
       logoAlt: form.logoAlt.trim() || title,
+      accent: form.accent.trim(),
     };
 
     const announcements = editingId
@@ -135,6 +141,38 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
     await persist({ ...draft, announcements }, editingId ? 'Announcement updated.' : 'Announcement published.');
     setForm(blankForm());
     setEditingId(null);
+  };
+
+  const handleGenerateArt = async () => {
+    if (!form.title.trim()) {
+      setError('Add a title before generating art.');
+      return;
+    }
+
+    setGeneratingArt(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const art = await generateAnnouncementArt({
+        title: form.title.trim(),
+        date: form.date.trim(),
+        kicker: form.kicker.trim(),
+      });
+      setForm((current) => ({
+        ...current,
+        logo: art.imageUrl,
+        logoAlt: `${current.title.trim() || 'Announcement'} artwork`,
+        accent: art.accent || current.accent,
+      }));
+      setStatus(`Gemini art ready (${art.model}). Review the preview, then save.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not generate art.');
+      if (err instanceof Error && err.message.includes('session')) {
+        setAuthenticated(false);
+      }
+    } finally {
+      setGeneratingArt(false);
+    }
   };
 
   const startEdit = (item: Announcement) => {
@@ -165,12 +203,27 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
   };
 
   const applyTheme = async (theme: SiteTheme) => {
-    await persist({ ...draft, theme }, `${THEMES.find((entry) => entry.id === theme)?.label || 'Theme'} applied.`);
+    await persist({ ...draft, theme }, `${THEMES.find((entry) => entry.id === theme)?.label || 'Theme'} applied for everyone.`);
   };
 
   const handleSiteExtras = async (event: FormEvent) => {
     event.preventDefault();
     await persist(draft, 'Site extras saved.');
+  };
+
+  const handlePopupSave = async (event: FormEvent) => {
+    event.preventDefault();
+    if (draft.popup.enabled && (!draft.popup.title.trim() || !draft.popup.body.trim())) {
+      setError('Popup needs a title and message when it is turned on.');
+      return;
+    }
+    await persist(draft, draft.popup.enabled ? 'Important popup is live for everyone.' : 'Important popup turned off.');
+  };
+
+  const switchTab = (next: AdminTab) => {
+    setTab(next);
+    setStatus(null);
+    setError(null);
   };
 
   if (checkingSession) {
@@ -187,7 +240,7 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         <div className="admin-kicker">Restricted</div>
         <h2 className="admin-title">Admin sign in</h2>
         <p className="admin-copy">
-          Manage announcements, seasonal themes, and other site extras for River Watch.
+          Manage live seasonal themes, announcements under the feedback button, and important popups for every visitor.
         </p>
         <form className="admin-form" onSubmit={handleLogin}>
           <div className="form-group">
@@ -229,7 +282,9 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         <div>
           <div className="admin-kicker">River Watch</div>
           <h2 className="admin-title">Admin</h2>
-          <p className="admin-copy">Add announcements and switch seasonal themes. More extras can land here later.</p>
+          <p className="admin-copy">
+            Themes and announcements are site-wide — once you save, every visitor sees them.
+          </p>
           {draft.persistence === 'ephemeral' && (
             <p className="admin-muted">
               This host may forget settings after a cold start. Add a Vercel Blob store to keep them for every visitor.
@@ -245,33 +300,28 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         <button
           className={`tab-pill ${tab === 'announcements' ? 'active' : ''}`}
           type="button"
-          onClick={() => {
-            setTab('announcements');
-            setStatus(null);
-            setError(null);
-          }}
+          onClick={() => switchTab('announcements')}
         >
           Announcements
         </button>
         <button
+          className={`tab-pill ${tab === 'popup' ? 'active' : ''}`}
+          type="button"
+          onClick={() => switchTab('popup')}
+        >
+          Important popup
+        </button>
+        <button
           className={`tab-pill ${tab === 'themes' ? 'active' : ''}`}
           type="button"
-          onClick={() => {
-            setTab('themes');
-            setStatus(null);
-            setError(null);
-          }}
+          onClick={() => switchTab('themes')}
         >
           Themes
         </button>
         <button
           className={`tab-pill ${tab === 'site' ? 'active' : ''}`}
           type="button"
-          onClick={() => {
-            setTab('site');
-            setStatus(null);
-            setError(null);
-          }}
+          onClick={() => switchTab('site')}
         >
           Site extras
         </button>
@@ -284,6 +334,9 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         <div className="admin-grid">
           <div className="admin-card">
             <h3 className="admin-section-title">{editingId ? 'Edit announcement' : 'New announcement'}</h3>
+            <p className="admin-copy">
+              These tiles stay live on the main page under the Give Feedback button.
+            </p>
             <form className="admin-form" onSubmit={handleSaveAnnouncement}>
               <div className="form-group">
                 <label htmlFor="ann-title">Title</label>
@@ -337,14 +390,32 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="ann-logo">Logo URL (optional)</label>
+                <label htmlFor="ann-logo">Image URL (optional)</label>
                 <input
                   id="ann-logo"
-                  type="url"
                   value={form.logo}
                   onChange={(event) => setForm({ ...form, logo: event.target.value })}
-                  placeholder="https://…/logo.png"
+                  placeholder="Paste a URL or generate with Gemini"
                 />
+              </div>
+              <div className="form-group">
+                <label htmlFor="ann-accent">Accent color (optional)</label>
+                <input
+                  id="ann-accent"
+                  value={form.accent}
+                  onChange={(event) => setForm({ ...form, accent: event.target.value })}
+                  placeholder="#2563eb"
+                />
+              </div>
+              <div className="admin-actions">
+                <button
+                  className="admin-ghost-button"
+                  type="button"
+                  onClick={handleGenerateArt}
+                  disabled={generatingArt || saving}
+                >
+                  {generatingArt ? 'Generating with Gemini…' : 'Generate art with Gemini'}
+                </button>
               </div>
               <label className="admin-check">
                 <input
@@ -355,7 +426,7 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
                 Show on the dashboard
               </label>
               <div className="admin-actions">
-                <button className="submit-button" type="submit" disabled={saving}>
+                <button className="submit-button" type="submit" disabled={saving || generatingArt}>
                   {saving ? 'Saving…' : editingId ? 'Update announcement' : 'Add announcement'}
                 </button>
                 {editingId && (
@@ -410,12 +481,120 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         </div>
       )}
 
+      {tab === 'popup' && (
+        <div className="admin-card">
+          <h3 className="admin-section-title">Important popup</h3>
+          <p className="admin-copy">
+            Use this for urgent notices. When the toggle is on, every visitor sees a modal until they dismiss it.
+          </p>
+          <form className="admin-form" onSubmit={handlePopupSave}>
+            <label className="admin-check admin-toggle-row">
+              <input
+                type="checkbox"
+                checked={draft.popup.enabled}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    popup: { ...draft.popup, enabled: event.target.checked },
+                  })
+                }
+              />
+              <span>
+                <strong>{draft.popup.enabled ? 'Popup is ON' : 'Popup is OFF'}</strong>
+                <span className="admin-muted"> — site-wide for all visitors</span>
+              </span>
+            </label>
+            <div className="form-group">
+              <label htmlFor="popup-title">Title</label>
+              <input
+                id="popup-title"
+                value={draft.popup.title}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    popup: { ...draft.popup, title: event.target.value },
+                  })
+                }
+                placeholder="River closure tonight"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="popup-body">Message</label>
+              <textarea
+                id="popup-body"
+                value={draft.popup.body}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    popup: { ...draft.popup, body: event.target.value },
+                  })
+                }
+                placeholder="Spell out what people need to know right away."
+              />
+            </div>
+            <div className="admin-form-row">
+              <div className="form-group">
+                <label htmlFor="popup-cta">Button text</label>
+                <input
+                  id="popup-cta"
+                  value={draft.popup.cta}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      popup: { ...draft.popup, cta: event.target.value },
+                    })
+                  }
+                  placeholder="Read more"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="popup-href">Button link</label>
+                <input
+                  id="popup-href"
+                  type="url"
+                  value={draft.popup.href}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      popup: { ...draft.popup, href: event.target.value },
+                    })
+                  }
+                  placeholder="https://…"
+                />
+              </div>
+            </div>
+            <button className="submit-button" type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save popup settings'}
+            </button>
+          </form>
+        </div>
+      )}
+
       {tab === 'themes' && (
         <div className="admin-card">
           <h3 className="admin-section-title">Seasonal themes</h3>
-          <p className="admin-copy">Pick a look for the season. It applies to the whole site right away.</p>
+          <p className="admin-copy">Weather seasons for everyday river ops. Changes apply to the whole site immediately.</p>
           <div className="theme-grid">
-            {THEMES.map((theme) => (
+            {seasonThemes.map((theme) => (
+              <button
+                key={theme.id}
+                type="button"
+                className={`theme-card theme-card-${theme.id} ${draft.theme === theme.id ? 'active' : ''}`}
+                onClick={() => applyTheme(theme.id)}
+                disabled={saving}
+              >
+                <span className="theme-mark" aria-hidden="true">{theme.mark}</span>
+                <span className="theme-label">{theme.label}</span>
+                <span className="theme-description">{theme.description}</span>
+                {draft.theme === theme.id && <span className="theme-active-tag">Active</span>}
+              </button>
+            ))}
+          </div>
+
+          <h3 className="admin-section-title" style={{ marginTop: '1.75rem' }}>Holiday themes</h3>
+          <p className="admin-copy">Flip these on for the holiday stretch — Halloween through New Year and more.</p>
+          <div className="theme-grid">
+            {holidayThemes.map((theme) => (
               <button
                 key={theme.id}
                 type="button"
@@ -437,7 +616,7 @@ export function AdminPage({ settings, onSettingsChange }: AdminPageProps) {
         <div className="admin-card">
           <h3 className="admin-section-title">Site extras</h3>
           <p className="admin-copy">
-            A few extra knobs for now. This is a good place to add more customizations later.
+            Optional header subtitle and a slim banner under the header.
           </p>
           <form className="admin-form" onSubmit={handleSiteExtras}>
             <div className="form-group">

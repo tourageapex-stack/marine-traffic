@@ -29,6 +29,12 @@ async function dispatch(req: IncomingMessage, res: ServerResponse) {
     return true;
   }
 
+  if (pathname === '/api/generate-announcement-art') {
+    const { default: handler } = await import('../api/generate-announcement-art.js');
+    await handler(req, res);
+    return true;
+  }
+
   return false;
 }
 

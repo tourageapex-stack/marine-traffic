@@ -5,13 +5,37 @@ const SETTINGS_PATHNAME = 'river-watch-site-settings.json';
 const LOCAL_PATH = path.join(process.cwd(), 'data', 'site-settings.json');
 const TMP_PATH = path.join('/tmp', SETTINGS_PATHNAME);
 
-const THEMES = ['default', 'spring', 'summer', 'fall', 'winter', 'holiday'];
+export const THEMES = [
+  'default',
+  'spring',
+  'summer',
+  'fall',
+  'winter',
+  'halloween',
+  'thanksgiving',
+  'christmas',
+  'newyear',
+  'july4',
+  'valentines',
+  'stpatricks',
+];
+
+const LEGACY_THEME_MAP = {
+  holiday: 'christmas',
+};
 
 export const DEFAULT_SETTINGS = {
   theme: 'default',
   banner: '',
   subtitle: '',
   announcements: [],
+  popup: {
+    enabled: false,
+    title: '',
+    body: '',
+    cta: '',
+    href: '',
+  },
 };
 
 const memory = globalThis;
@@ -35,15 +59,29 @@ function sanitizeAnnouncement(item) {
     href: asString(item.href).trim().slice(0, 500),
     cta: asString(item.cta).trim().slice(0, 40) || 'Details',
     kicker: asString(item.kicker).trim().slice(0, 40) || 'Announcement',
-    logo: asString(item.logo).trim().slice(0, 500),
+    logo: asString(item.logo).trim().slice(0, 2000),
     logoAlt: asString(item.logoAlt).trim().slice(0, 120),
+    accent: asString(item.accent).trim().slice(0, 32),
     published: item.published !== false,
+  };
+}
+
+function sanitizePopup(input) {
+  const source = input && typeof input === 'object' ? input : {};
+  return {
+    enabled: Boolean(source.enabled),
+    title: asString(source.title).trim().slice(0, 120),
+    body: asString(source.body).trim().slice(0, 600),
+    cta: asString(source.cta).trim().slice(0, 40),
+    href: asString(source.href).trim().slice(0, 500),
   };
 }
 
 export function sanitizeSettings(input) {
   const source = input && typeof input === 'object' ? input : {};
-  const theme = THEMES.includes(source.theme) ? source.theme : 'default';
+  const rawTheme = asString(source.theme, 'default');
+  const mappedTheme = LEGACY_THEME_MAP[rawTheme] || rawTheme;
+  const theme = THEMES.includes(mappedTheme) ? mappedTheme : 'default';
   const announcements = Array.isArray(source.announcements)
     ? source.announcements.map(sanitizeAnnouncement).filter(Boolean).slice(0, 20)
     : [];
@@ -53,6 +91,7 @@ export function sanitizeSettings(input) {
     banner: asString(source.banner).trim().slice(0, 240),
     subtitle: asString(source.subtitle).trim().slice(0, 80),
     announcements,
+    popup: sanitizePopup(source.popup),
   };
 }
 
@@ -106,6 +145,24 @@ async function writeToBlob(settings) {
   }
 }
 
+export async function uploadPublicBytes(pathname, bytes, contentType) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return null;
+
+  try {
+    const { put } = await import('@vercel/blob');
+    const blob = await put(pathname, bytes, {
+      access: 'public',
+      addRandomSuffix: true,
+      token,
+      contentType,
+    });
+    return blob.url;
+  } catch {
+    return null;
+  }
+}
+
 export async function readSettings() {
   const fromBlob = await readFromBlob();
   if (fromBlob) {
@@ -126,7 +183,7 @@ export async function readSettings() {
   }
 
   if (memory.__riverWatchSettings) return memory.__riverWatchSettings;
-  return { ...DEFAULT_SETTINGS, announcements: [] };
+  return sanitizeSettings(DEFAULT_SETTINGS);
 }
 
 export async function writeSettings(input) {

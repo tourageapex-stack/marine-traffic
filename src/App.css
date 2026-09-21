@@ -90,6 +90,37 @@ header {
   background: #1d4ed8;
 }
 
+.add-home-button {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.add-home-steps {
+  margin: 0 0 1.5rem;
+  padding-left: 1.25rem;
+  color: #475569;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.add-home-steps li + li {
+  margin-top: 0.65rem;
+}
+
+.add-home-share-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -0.15em;
+  color: #2563eb;
+  margin: 0 0.1rem;
+}
+
+.theme-header-mark {
+  font-size: 1.15rem;
+  margin-left: 0.15rem;
+}
+
 .site-footer {
   padding: 2rem;
   text-align: center;
@@ -161,6 +192,20 @@ header {
   color: inherit;
   box-shadow: 0 4px 12px rgba(2, 6, 23, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.announcement-tile-art {
+  overflow: hidden;
+}
+
+.announcement-tile-art .announcement-logo {
+  border-color: color-mix(in srgb, var(--announcement-accent, #facc15) 80%, white);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.announcement-tile-art .announcement-kicker,
+.announcement-tile-art .announcement-cta {
+  color: var(--announcement-accent, #facc15);
 }
 
 .announcement-tile:hover {
@@ -616,6 +661,11 @@ button.vessel-card-link:hover {
   }
 
   .feedback-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add-home-button {
     width: 100%;
     justify-content: center;
   }
@@ -1262,7 +1312,76 @@ button.vessel-card-link:hover {
 .theme-card-summer { background: #f0f9ff; }
 .theme-card-fall { background: #fff7ed; }
 .theme-card-winter { background: #f8fafc; }
-.theme-card-holiday { background: #fefce8; }
+.theme-card-halloween { background: #fff7ed; }
+.theme-card-thanksgiving { background: #fffbeb; }
+.theme-card-christmas { background: #fefce8; }
+.theme-card-newyear { background: #f5f3ff; }
+.theme-card-july4 { background: #eff6ff; }
+.theme-card-valentines { background: #fff1f2; }
+.theme-card-stpatricks { background: #ecfdf5; }
+
+.admin-toggle-row {
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.popup-announcement-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(2, 6, 23, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.popup-announcement-dialog {
+  width: min(440px, 100%);
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.35);
+}
+
+.popup-announcement-kicker {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #dc2626;
+  margin-bottom: 0.4rem;
+}
+
+.popup-announcement-title {
+  margin: 0 0 0.65rem;
+  color: #0f172a;
+  font-size: 1.35rem;
+}
+
+.popup-announcement-body {
+  margin: 0 0 1.25rem;
+  color: #475569;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.popup-announcement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.popup-announcement-cta {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Seasonal themes */
 .app-container[data-theme="spring"] {
@@ -1378,28 +1497,172 @@ button.vessel-card-link:hover {
   color: #7dd3fc;
 }
 
-.app-container[data-theme="holiday"] {
+.app-container[data-theme="halloween"] {
+  background-color: #fff7ed;
+}
+
+.app-container[data-theme="halloween"] header {
+  background-color: #1c1917;
+}
+
+.app-container[data-theme="halloween"] .feedback-button,
+.app-container[data-theme="halloween"] .submit-button,
+.app-container[data-theme="halloween"] .notice-button,
+.app-container[data-theme="halloween"] .site-banner {
+  background: #ea580c;
+  border-color: #ea580c;
+}
+
+.app-container[data-theme="halloween"] .movement-toggle-btn.active {
+  border-color: #ea580c;
+}
+
+.app-container[data-theme="halloween"] .movement-toggle-btn.active .toggle-badge {
+  background: #ea580c;
+}
+
+.app-container[data-theme="thanksgiving"] {
+  background-color: #fffbeb;
+}
+
+.app-container[data-theme="thanksgiving"] header {
+  background-color: #451a03;
+}
+
+.app-container[data-theme="thanksgiving"] .feedback-button,
+.app-container[data-theme="thanksgiving"] .submit-button,
+.app-container[data-theme="thanksgiving"] .notice-button,
+.app-container[data-theme="thanksgiving"] .site-banner {
+  background: #b45309;
+  border-color: #b45309;
+}
+
+.app-container[data-theme="thanksgiving"] .movement-toggle-btn.active {
+  border-color: #b45309;
+}
+
+.app-container[data-theme="thanksgiving"] .movement-toggle-btn.active .toggle-badge {
+  background: #b45309;
+}
+
+.app-container[data-theme="christmas"] {
   background-color: #fefce8;
 }
 
-.app-container[data-theme="holiday"] header {
+.app-container[data-theme="christmas"] header {
   background-color: #14532d;
 }
 
-.app-container[data-theme="holiday"] .feedback-button,
-.app-container[data-theme="holiday"] .submit-button,
-.app-container[data-theme="holiday"] .notice-button,
-.app-container[data-theme="holiday"] .site-banner {
+.app-container[data-theme="christmas"] .feedback-button,
+.app-container[data-theme="christmas"] .submit-button,
+.app-container[data-theme="christmas"] .notice-button,
+.app-container[data-theme="christmas"] .site-banner {
   background: #ca8a04;
   border-color: #ca8a04;
   color: #14532d;
 }
 
-.app-container[data-theme="holiday"] .movement-toggle-btn.active {
+.app-container[data-theme="christmas"] .movement-toggle-btn.active {
   border-color: #ca8a04;
 }
 
-.app-container[data-theme="holiday"] .movement-toggle-btn.active .toggle-badge {
+.app-container[data-theme="christmas"] .movement-toggle-btn.active .toggle-badge {
   background: #ca8a04;
   color: #14532d;
+}
+
+.app-container[data-theme="newyear"] {
+  background-color: #f5f3ff;
+}
+
+.app-container[data-theme="newyear"] header {
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+}
+
+.app-container[data-theme="newyear"] .feedback-button,
+.app-container[data-theme="newyear"] .submit-button,
+.app-container[data-theme="newyear"] .notice-button,
+.app-container[data-theme="newyear"] .site-banner {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.app-container[data-theme="newyear"] .movement-toggle-btn.active {
+  border-color: #7c3aed;
+}
+
+.app-container[data-theme="newyear"] .movement-toggle-btn.active .toggle-badge {
+  background: #7c3aed;
+}
+
+.app-container[data-theme="july4"] {
+  background-color: #eff6ff;
+}
+
+.app-container[data-theme="july4"] header {
+  background-color: #1e3a8a;
+}
+
+.app-container[data-theme="july4"] .feedback-button,
+.app-container[data-theme="july4"] .submit-button,
+.app-container[data-theme="july4"] .notice-button,
+.app-container[data-theme="july4"] .site-banner {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.app-container[data-theme="july4"] .movement-toggle-btn.active {
+  border-color: #dc2626;
+}
+
+.app-container[data-theme="july4"] .movement-toggle-btn.active .toggle-badge {
+  background: #dc2626;
+}
+
+.app-container[data-theme="valentines"] {
+  background-color: #fff1f2;
+}
+
+.app-container[data-theme="valentines"] header {
+  background-color: #881337;
+}
+
+.app-container[data-theme="valentines"] .feedback-button,
+.app-container[data-theme="valentines"] .submit-button,
+.app-container[data-theme="valentines"] .notice-button,
+.app-container[data-theme="valentines"] .site-banner {
+  background: #e11d48;
+  border-color: #e11d48;
+}
+
+.app-container[data-theme="valentines"] .movement-toggle-btn.active {
+  border-color: #e11d48;
+}
+
+.app-container[data-theme="valentines"] .movement-toggle-btn.active .toggle-badge {
+  background: #e11d48;
+}
+
+.app-container[data-theme="stpatricks"] {
+  background-color: #ecfdf5;
+}
+
+.app-container[data-theme="stpatricks"] header {
+  background-color: #14532d;
+}
+
+.app-container[data-theme="stpatricks"] .feedback-button,
+.app-container[data-theme="stpatricks"] .submit-button,
+.app-container[data-theme="stpatricks"] .notice-button,
+.app-container[data-theme="stpatricks"] .site-banner {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.app-container[data-theme="stpatricks"] .movement-toggle-btn.active {
+  border-color: #16a34a;
+}
+
+.app-container[data-theme="stpatricks"] .movement-toggle-btn.active .toggle-badge {
+  background: #16a34a;
 }

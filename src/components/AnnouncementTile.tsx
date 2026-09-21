@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { Announcement } from '../services/siteSettings';
 
 interface AnnouncementTileProps {
@@ -5,6 +6,19 @@ interface AnnouncementTileProps {
 }
 
 export function AnnouncementTile({ announcement }: AnnouncementTileProps) {
+  const style = {
+    ...(announcement.accent
+      ? ({ '--announcement-accent': announcement.accent } as CSSProperties)
+      : {}),
+    ...(announcement.logo
+      ? ({
+          backgroundImage: `linear-gradient(120deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72)), url(${announcement.logo})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } as CSSProperties)
+      : {}),
+  };
+
   const content = (
     <>
       {announcement.logo ? (
@@ -30,15 +44,23 @@ export function AnnouncementTile({ announcement }: AnnouncementTileProps) {
   if (announcement.href) {
     return (
       <a
-        className="announcement-tile"
+        className={`announcement-tile${announcement.logo ? ' announcement-tile-art' : ''}`}
         href={announcement.href}
         target="_blank"
         rel="noopener noreferrer"
+        style={style}
       >
         {content}
       </a>
     );
   }
 
-  return <div className="announcement-tile announcement-tile-static">{content}</div>;
+  return (
+    <div
+      className={`announcement-tile announcement-tile-static${announcement.logo ? ' announcement-tile-art' : ''}`}
+      style={style}
+    >
+      {content}
+    </div>
+  );
 }
