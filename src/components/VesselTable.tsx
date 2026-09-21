@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { VesselTraffic, MovementType } from '../services/api';
-import { getMarineTrafficUrl, openMarineTrafficInNewTab } from '../services/marineTraffic';
+
+const copyText = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    const input = document.createElement('textarea');
+    input.value = text;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+    input.setSelectionRange(0, text.length);
+    document.execCommand('copy');
+    document.body.removeChild(input);
+  }
+};
 
 interface VesselTableProps {
   data: VesselTraffic[];
@@ -11,6 +29,7 @@ type SortKey = keyof VesselTraffic | 'vessel.name';
 
 export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = 'tie-ups' }) => {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
+  const [copiedName, setCopiedName] = useState<string | null>(null);
 
   const isTieUps = movementType === 'tie-ups';
 
@@ -102,16 +121,25 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     return <span style={{ color: '#3b82f6', marginLeft: '0.5rem' }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const copyVesselName = async (name: string) => {
+    const value = name.trim();
+    if (!value || value === 'N/A') return;
+    await copyText(value);
+    setCopiedName(value);
+    window.setTimeout(() => {
+      setCopiedName((current) => (current === value ? null : current));
+    }, 3000);
+  };
+
   const VesselName = ({ vessel }: { vessel: VesselTraffic }) => {
-    const url = getMarineTrafficUrl(vessel.vessel);
     const name = vessel.vessel?.name || 'N/A';
-    if (!url) return <>{name}</>;
+    if (name === 'N/A') return <>{name}</>;
     return (
       <button
         type="button"
         className="vessel-name-link"
-        title="Open this ship on MarineTraffic"
-        onClick={() => openMarineTrafficInNewTab(vessel.vessel)}
+        title="Copy ship name"
+        onClick={() => copyVesselName(name)}
       >
         {name}
       </button>
@@ -167,7 +195,8 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
       {/* Mobile Card View */}
       <div className="mobile-only mobile-cards">
         {sortedData.map((vessel, index) => {
-          const url = getMarineTrafficUrl(vessel.vessel);
+          const name = vessel.vessel?.name || 'N/A';
+          const canCopy = name !== 'N/A';
           const card = (
             <>
             <div className="card-header">
@@ -187,7 +216,7 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
               </div>
             </div>
             
-            <h3 className="card-vessel-name">{vessel.vessel?.name || 'N/A'}</h3>
+            <h3 className="card-vessel-name">{name}</h3>
             
             <div className="card-route-stack">
               <div className="route-step">
@@ -211,14 +240,14 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
             </>
           );
 
-          if (url) {
+          if (canCopy) {
             return (
               <button
                 type="button"
                 className="vessel-card vessel-card-link"
-                key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}
-                title="Open this ship on MarineTraffic"
-                onClick={() => openMarineTrafficInNewTab(vessel.vessel)}
+                key={`${name}-card-${index}`}
+                title="Copy ship name"
+                onClick={() => copyVesselName(name)}
               >
                 {card}
               </button>
@@ -226,12 +255,18 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
           }
 
           return (
-            <div className="vessel-card" key={`${vessel.vessel?.name || 'vessel'}-card-${index}`}>
+            <div className="vessel-card" key={`${name}-card-${index}`}>
               {card}
             </div>
           );
         })}
       </div>
+
+      {copiedName &&
+        createPortal(
+          <div className="copy-toast" role="status">Copied {copiedName}</div>,
+          document.body
+        )}
     </div>
   );
 };
