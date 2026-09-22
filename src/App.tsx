@@ -65,8 +65,6 @@ function App() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
