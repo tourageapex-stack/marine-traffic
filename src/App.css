@@ -103,6 +103,38 @@ header {
   white-space: nowrap;
 }
 
+.add-home-dialog .notice-copy {
+  margin-bottom: 1rem;
+}
+
+.add-home-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0 0 1.15rem;
+}
+
+.add-home-tab {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.add-home-tab.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.add-home-install-now {
+  margin-bottom: 1rem;
+}
+
 .add-home-steps {
   margin: 0 0 1.5rem;
   padding-left: 1.25rem;
@@ -122,6 +154,23 @@ header {
   vertical-align: -0.15em;
   color: #2563eb;
   margin: 0 0.1rem;
+}
+
+.footer-install-link {
+  display: block;
+  margin: 0.75rem auto 0;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer-install-link:hover {
+  color: #1d4ed8;
 }
 
 .theme-header-mark {

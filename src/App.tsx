@@ -389,9 +389,12 @@ function App() {
       <footer className="site-footer">
         <p>© 2026 River Watch | Data via ColRip Portal</p>
         {page === 'dashboard' && (
-          <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
-            Give Feedback
-          </button>
+          <>
+            <AddToHomeScreen variant="footer" />
+            <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
+              Give Feedback
+            </button>
+          </>
         )}
         {page !== 'admin' && (
           <button className="footer-admin-link" onClick={() => goTo('admin')}>
