@@ -39,6 +39,11 @@ const ANCHORAGE_NAME =
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
 const VAN_PDX_TRANSIT_FROM_LS_MS = 8 * MS_HOUR;
+/** Alongside time shorter than this is a template order, not a ship at a berth. */
+const MIN_BERTH_STAY_MS = MS_HOUR;
+/** Several ships sharing one berth timestamp are still at anchor on a placeholder order. */
+const PLACEHOLDER_ARRIVAL_COUNT = 2;
+const PLACEHOLDER_LET_GO_COUNT = 3;
 
 export const isRiverAnchorage = (name?: string, code?: string): boolean => {
   const n = (name || '').toUpperCase();
@@ -49,11 +54,23 @@ export const isRiverAnchorage = (name?: string, code?: string): boolean => {
   return ANCHORAGE_CODE_PREFIXES.some((prefix) => c.startsWith(prefix));
 };
 
+/** Vancouver Berth 5 is not a working berth for this schedule. Longview Berth 5 stays. */
+export const isVancouverBerthFive = (name?: string, code?: string): boolean => {
+  const n = (name || '').toUpperCase();
+  const c = (code || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  const compact = c.replace(/\s+/g, '');
+  const vancouverCode = /^(VAN|VU|VL)(?=\d|\s|$)/.test(c) || /^(VAN|VU|VL)\d/.test(compact);
+  const vancouverName = n.includes('VANCOUVER');
+  if (/^(VAN|VU|VL)0*5$/.test(compact)) return true;
+  const berthFive = /\bBERTH\s*(?:NO\.?|#)?\s*0*5\b/.test(n);
+  return berthFive && (vancouverName || vancouverCode);
+};
+
 export const portForWorkingBerth = (
   name?: string,
   code?: string
 ): SchedulePort | null => {
-  if (isRiverAnchorage(name, code)) return null;
+  if (isRiverAnchorage(name, code) || isVancouverBerthFive(name, code)) return null;
 
   for (const port of SCHEDULE_PORTS) {
     if (isPortMatch(name, code, port)) return port;
@@ -105,8 +122,39 @@ const sameBerth = (aCode?: string, aName?: string, bCode?: string, bName?: strin
   return (aName || '').trim().toLowerCase() === (bName || '').trim().toLowerCase();
 };
 
+const movementInstantKey = (
+  movement: VesselTraffic,
+  side: 'from' | 'to'
+): string | null => {
+  const name = side === 'to' ? movement.toLocationName : movement.fromLocationName;
+  const code = side === 'to' ? movement.toLocationShortCode : movement.fromLocationShortCode;
+  if (!portForWorkingBerth(name, code)) return null;
+  const instant = parseTime(movement.orderTime)?.getTime();
+  if (instant == null) return null;
+  const berth = (code || name || '').toUpperCase().trim();
+  return `${berth}|${instant}`;
+};
+
+const countBerthInstants = (
+  data: VesselTraffic[],
+  side: 'from' | 'to'
+): Map<string, number> => {
+  const counts = new Map<string, number>();
+  for (const movement of data) {
+    if (side === 'to' && !isRiverAnchorage(movement.fromLocationName, movement.fromLocationShortCode)) {
+      continue;
+    }
+    const key = movementInstantKey(movement, side);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  return counts;
+};
+
 export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
   const byVessel = new Map<string, VesselTraffic[]>();
+  const placeholderArrivals = countBerthInstants(data, 'to');
+  const placeholderLetGos = countBerthInstants(data, 'from');
 
   for (const movement of data) {
     const name = (movement.vessel?.name || '').trim();
@@ -129,6 +177,14 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
     for (const arrival of ordered) {
       const port = portForWorkingBerth(arrival.toLocationName, arrival.toLocationShortCode);
       if (!port) continue;
+      const arrivalKey = movementInstantKey(arrival, 'to');
+      if (
+        arrivalKey &&
+        isRiverAnchorage(arrival.fromLocationName, arrival.fromLocationShortCode) &&
+        (placeholderArrivals.get(arrivalKey) || 0) >= PLACEHOLDER_ARRIVAL_COUNT
+      ) {
+        continue;
+      }
       const berthedAt = estimateBerthArrival(arrival);
       if (!berthedAt) continue;
 
@@ -141,6 +197,8 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
         const candidate = ordered[index];
         const candidateTime = parseTime(candidate.orderTime);
         if (!candidateTime || candidateTime.getTime() < berthedAt.getTime()) continue;
+        const letGoKey = movementInstantKey(candidate, 'from');
+        if (letGoKey && (placeholderLetGos.get(letGoKey) || 0) >= PLACEHOLDER_LET_GO_COUNT) continue;
         if (
           sameBerth(
             candidate.fromLocationShortCode,
@@ -155,6 +213,9 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
           break;
         }
       }
+
+      const letGoAt = letGo ? parseTime(letGo.orderTime) : null;
+      if (letGoAt && letGoAt.getTime() - berthedAt.getTime() < MIN_BERTH_STAY_MS) continue;
 
       stays.push({
         id: `${vesselName}|${berthCode}|${berthedAt.toISOString()}`,
