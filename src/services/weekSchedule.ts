@@ -16,44 +16,132 @@ export interface PortStay {
   arrivalStatus: string;
 }
 
-const ANCHORAGE_CODES = new Set([
-  'LS',
-  'SEA',
+/**
+ * Non-working locations from the ColRip berth key
+ * (https://colrip.com/berth-and-tugs-launch-key/). Codes are compacted
+ * (letters and digits only) so "VAN A", "RICE 3", and "RICE3" match.
+ * KINWU / KINWL are the Willbridge anchorage on the Willamette, not berths.
+ */
+const NON_WORKING_BERTH_CODES = new Set([
+  '38',
+  'AST',
   'ASTAN',
+  'BWA',
+  'CI1',
+  'CI2',
+  'CI3',
+  'KA',
+  'KA1',
+  'KA2',
+  'KA3',
+  'KA4',
+  'KAB1',
+  'KAB2',
+  'KALA',
+  'KALU',
+  'KDA',
+  'KINWL',
+  'KINWU',
+  'KUDA',
+  'LA1',
+  'LA2',
+  'LA3',
+  'LA4',
+  'LA5',
+  'LDA',
+  'LGVA',
+  'LS',
+  'PWA',
+  'RA1',
+  'RA2',
+  'RA3',
+  'RA4',
+  'RA5',
+  'RA6',
+  'RA7',
+  'RAB1',
+  'RAB2',
+  'RAINA',
+  'RELKA',
+  'RELLV',
   'RELVL',
-  'VAN A',
-  'VAN L',
+  'RICEA',
+  'RICE1',
+  'RICE2',
+  'RICE3',
+  'RICE4',
+  'RICE5',
+  'SEA',
+  'VANA',
+  'VANL',
+  'VANU',
+  'VDA',
+  'VL1',
+  'VL10',
+  'VL11',
+  'VL12',
+  'VL2',
+  'VL3',
+  'VL4',
+  'VL5',
+  'VL6',
+  'VL7',
+  'VL8',
+  'VL9',
+  'VLB1',
   'VNBUOY',
-  'KA 2',
-  'LA 1',
-  'LA 2',
-  'CI 1',
-  'CI 2',
+  'VU1',
+  'VU2',
+  'VU3',
+  'VUB2',
+  'VUB3',
+  'VUB4',
+  'VUDA',
 ]);
 
-const ANCHORAGE_CODE_PREFIXES = ['KA B', 'LA ', 'RICE', 'VU B', 'VL B', 'RA B', 'CI ', 'WI '];
+const ANCHORAGE_CODE_PREFIXES = ['KAB', 'RICE', 'VUB', 'VLB', 'RAB', 'CI', 'WI'];
 
 const ANCHORAGE_NAME =
-  /ANCHOR|ANCHORAGE|BUOY|PILOT STATION|LIGHTSHIP|\bRELIEF\b/;
+  /ANCHOR|ANCHORAGE|BUOY|PILOT STATION|LIGHTSHIP|\bRELIEF\b|WILLBRIDGE|KINDER-MORGAN|KINDER MORGAN/;
+
+const compactLocationCode = (code?: string): string =>
+  (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
 const VAN_PDX_TRANSIT_FROM_LS_MS = 8 * MS_HOUR;
+/** Alongside time shorter than this is a template order, not a ship at a berth. */
+const MIN_BERTH_STAY_MS = MS_HOUR;
+/** Several ships sharing one berth timestamp are still at anchor on a placeholder order. */
+const PLACEHOLDER_ARRIVAL_COUNT = 2;
+const PLACEHOLDER_LET_GO_COUNT = 3;
 
 export const isRiverAnchorage = (name?: string, code?: string): boolean => {
   const n = (name || '').toUpperCase();
-  const c = (code || '').toUpperCase().trim();
-  if (!n && !c) return true;
+  const compact = compactLocationCode(code);
+  if (!n && !compact) return true;
   if (ANCHORAGE_NAME.test(n)) return true;
-  if (ANCHORAGE_CODES.has(c)) return true;
-  return ANCHORAGE_CODE_PREFIXES.some((prefix) => c.startsWith(prefix));
+  if (NON_WORKING_BERTH_CODES.has(compact)) return true;
+  return ANCHORAGE_CODE_PREFIXES.some((prefix) => compact.startsWith(prefix));
+};
+
+/** Vancouver Berth 5 is not a working berth for this schedule. Longview Berth 5 stays. */
+export const isVancouverBerthFive = (name?: string, code?: string): boolean => {
+  const n = (name || '').toUpperCase();
+  const c = (code || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  const compact = c.replace(/\s+/g, '');
+  const vancouverCode = /^(VAN|VU|VL)(?=\d|\s|$)/.test(c) || /^(VAN|VU|VL)\d/.test(compact);
+  const vancouverName = n.includes('VANCOUVER');
+  if (/^(VAN|VU|VL)0*5$/.test(compact)) return true;
+  const berthFive = /\bBERTH\s*(?:NO\.?|#)?\s*0*5\b/.test(n);
+  return berthFive && (vancouverName || vancouverCode);
 };
 
 export const portForWorkingBerth = (
   name?: string,
   code?: string
 ): SchedulePort | null => {
-  if (isRiverAnchorage(name, code)) return null;
+  if (isRiverAnchorage(name, code) || isVancouverBerthFive(name, code)) return null;
 
   for (const port of SCHEDULE_PORTS) {
     if (isPortMatch(name, code, port)) return port;
@@ -61,9 +149,6 @@ export const portForWorkingBerth = (
 
   const n = (name || '').toLowerCase();
   const c = (code || '').toUpperCase().trim();
-  if (c === 'KINWU' || n.includes('kinder-morgan') || n.includes('kinder morgan')) {
-    return 'Vancouver';
-  }
   if (c === 'CHEV' || n.includes('chevron')) return 'Portland';
   if (c === 'SEAPT' || n.includes('seaport')) return 'Longview';
   return null;
@@ -105,8 +190,39 @@ const sameBerth = (aCode?: string, aName?: string, bCode?: string, bName?: strin
   return (aName || '').trim().toLowerCase() === (bName || '').trim().toLowerCase();
 };
 
+const movementInstantKey = (
+  movement: VesselTraffic,
+  side: 'from' | 'to'
+): string | null => {
+  const name = side === 'to' ? movement.toLocationName : movement.fromLocationName;
+  const code = side === 'to' ? movement.toLocationShortCode : movement.fromLocationShortCode;
+  if (!portForWorkingBerth(name, code)) return null;
+  const instant = parseTime(movement.orderTime)?.getTime();
+  if (instant == null) return null;
+  const berth = (code || name || '').toUpperCase().trim();
+  return `${berth}|${instant}`;
+};
+
+const countBerthInstants = (
+  data: VesselTraffic[],
+  side: 'from' | 'to'
+): Map<string, number> => {
+  const counts = new Map<string, number>();
+  for (const movement of data) {
+    if (side === 'to' && !isRiverAnchorage(movement.fromLocationName, movement.fromLocationShortCode)) {
+      continue;
+    }
+    const key = movementInstantKey(movement, side);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  return counts;
+};
+
 export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
   const byVessel = new Map<string, VesselTraffic[]>();
+  const placeholderArrivals = countBerthInstants(data, 'to');
+  const placeholderLetGos = countBerthInstants(data, 'from');
 
   for (const movement of data) {
     const name = (movement.vessel?.name || '').trim();
@@ -129,6 +245,14 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
     for (const arrival of ordered) {
       const port = portForWorkingBerth(arrival.toLocationName, arrival.toLocationShortCode);
       if (!port) continue;
+      const arrivalKey = movementInstantKey(arrival, 'to');
+      if (
+        arrivalKey &&
+        isRiverAnchorage(arrival.fromLocationName, arrival.fromLocationShortCode) &&
+        (placeholderArrivals.get(arrivalKey) || 0) >= PLACEHOLDER_ARRIVAL_COUNT
+      ) {
+        continue;
+      }
       const berthedAt = estimateBerthArrival(arrival);
       if (!berthedAt) continue;
 
@@ -141,6 +265,8 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
         const candidate = ordered[index];
         const candidateTime = parseTime(candidate.orderTime);
         if (!candidateTime || candidateTime.getTime() < berthedAt.getTime()) continue;
+        const letGoKey = movementInstantKey(candidate, 'from');
+        if (letGoKey && (placeholderLetGos.get(letGoKey) || 0) >= PLACEHOLDER_LET_GO_COUNT) continue;
         if (
           sameBerth(
             candidate.fromLocationShortCode,
@@ -155,6 +281,9 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
           break;
         }
       }
+
+      const letGoAt = letGo ? parseTime(letGo.orderTime) : null;
+      if (letGoAt && letGoAt.getTime() - berthedAt.getTime() < MIN_BERTH_STAY_MS) continue;
 
       stays.push({
         id: `${vesselName}|${berthCode}|${berthedAt.toISOString()}`,
