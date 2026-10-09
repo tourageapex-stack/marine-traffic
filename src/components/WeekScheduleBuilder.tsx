@@ -75,7 +75,7 @@ export function WeekScheduleBuilder({
           <h2>Week in port</h2>
           <p>
             Build a working timeline of ships at berth — from tie-up to let-go.
-            Anchorages, buoys, and Vancouver Berth 5 are left off.
+            Anchorages (including Willbridge), buoys, and Vancouver Berth 5 are left off.
           </p>
         </div>
       )}
@@ -85,7 +85,7 @@ export function WeekScheduleBuilder({
           {collapsible && (
             <p className="week-builder-intro">
               Build a working timeline of ships at berth — from tie-up to let-go.
-              Anchorages, buoys, and Vancouver Berth 5 are left off.
+              Anchorages (including Willbridge), buoys, and Vancouver Berth 5 are left off.
             </p>
           )}
 

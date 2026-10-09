@@ -16,25 +16,96 @@ export interface PortStay {
   arrivalStatus: string;
 }
 
-const ANCHORAGE_CODES = new Set([
-  'LS',
-  'SEA',
+/**
+ * Non-working locations from the ColRip berth key
+ * (https://colrip.com/berth-and-tugs-launch-key/). Codes are compacted
+ * (letters and digits only) so "VAN A", "RICE 3", and "RICE3" match.
+ * KINWU / KINWL are the Willbridge anchorage on the Willamette, not berths.
+ */
+const NON_WORKING_BERTH_CODES = new Set([
+  '38',
+  'AST',
   'ASTAN',
+  'BWA',
+  'CI1',
+  'CI2',
+  'CI3',
+  'KA',
+  'KA1',
+  'KA2',
+  'KA3',
+  'KA4',
+  'KAB1',
+  'KAB2',
+  'KALA',
+  'KALU',
+  'KDA',
+  'KINWL',
+  'KINWU',
+  'KUDA',
+  'LA1',
+  'LA2',
+  'LA3',
+  'LA4',
+  'LA5',
+  'LDA',
+  'LGVA',
+  'LS',
+  'PWA',
+  'RA1',
+  'RA2',
+  'RA3',
+  'RA4',
+  'RA5',
+  'RA6',
+  'RA7',
+  'RAB1',
+  'RAB2',
+  'RAINA',
+  'RELKA',
+  'RELLV',
   'RELVL',
-  'VAN A',
-  'VAN L',
+  'RICEA',
+  'RICE1',
+  'RICE2',
+  'RICE3',
+  'RICE4',
+  'RICE5',
+  'SEA',
+  'VANA',
+  'VANL',
+  'VANU',
+  'VDA',
+  'VL1',
+  'VL10',
+  'VL11',
+  'VL12',
+  'VL2',
+  'VL3',
+  'VL4',
+  'VL5',
+  'VL6',
+  'VL7',
+  'VL8',
+  'VL9',
+  'VLB1',
   'VNBUOY',
-  'KA 2',
-  'LA 1',
-  'LA 2',
-  'CI 1',
-  'CI 2',
+  'VU1',
+  'VU2',
+  'VU3',
+  'VUB2',
+  'VUB3',
+  'VUB4',
+  'VUDA',
 ]);
 
-const ANCHORAGE_CODE_PREFIXES = ['KA B', 'LA ', 'RICE', 'VU B', 'VL B', 'RA B', 'CI ', 'WI '];
+const ANCHORAGE_CODE_PREFIXES = ['KAB', 'RICE', 'VUB', 'VLB', 'RAB', 'CI', 'WI'];
 
 const ANCHORAGE_NAME =
-  /ANCHOR|ANCHORAGE|BUOY|PILOT STATION|LIGHTSHIP|\bRELIEF\b/;
+  /ANCHOR|ANCHORAGE|BUOY|PILOT STATION|LIGHTSHIP|\bRELIEF\b|WILLBRIDGE|KINDER-MORGAN|KINDER MORGAN/;
+
+const compactLocationCode = (code?: string): string =>
+  (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
@@ -47,11 +118,11 @@ const PLACEHOLDER_LET_GO_COUNT = 3;
 
 export const isRiverAnchorage = (name?: string, code?: string): boolean => {
   const n = (name || '').toUpperCase();
-  const c = (code || '').toUpperCase().trim();
-  if (!n && !c) return true;
+  const compact = compactLocationCode(code);
+  if (!n && !compact) return true;
   if (ANCHORAGE_NAME.test(n)) return true;
-  if (ANCHORAGE_CODES.has(c)) return true;
-  return ANCHORAGE_CODE_PREFIXES.some((prefix) => c.startsWith(prefix));
+  if (NON_WORKING_BERTH_CODES.has(compact)) return true;
+  return ANCHORAGE_CODE_PREFIXES.some((prefix) => compact.startsWith(prefix));
 };
 
 /** Vancouver Berth 5 is not a working berth for this schedule. Longview Berth 5 stays. */
@@ -78,9 +149,6 @@ export const portForWorkingBerth = (
 
   const n = (name || '').toLowerCase();
   const c = (code || '').toUpperCase().trim();
-  if (c === 'KINWU' || n.includes('kinder-morgan') || n.includes('kinder morgan')) {
-    return 'Vancouver';
-  }
   if (c === 'CHEV' || n.includes('chevron')) return 'Portland';
   if (c === 'SEAPT' || n.includes('seaport')) return 'Longview';
   return null;
