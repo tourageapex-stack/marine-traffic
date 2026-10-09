@@ -8,6 +8,8 @@ import { AnnouncementTile } from './components/AnnouncementTile';
 import { PopupAnnouncementModal } from './components/PopupAnnouncementModal';
 import { UpdateNotice } from './components/UpdateNotice';
 import { AddToHomeScreen } from './components/AddToHomeScreen';
+import { WeekScheduleBuilder } from './components/WeekScheduleBuilder';
+import { WeekSchedulePage } from './components/WeekSchedulePage';
 import {
   DEFAULT_SETTINGS,
   DEFAULT_POPUP,
@@ -15,17 +17,28 @@ import {
   fetchSiteSettings,
   type SiteSettings,
 } from './services/siteSettings';
+import {
+  SCHEDULE_PORTS,
+  buildPortStays,
+  startOfWeekMonday,
+  staysOverlappingWeek,
+  toWeekParam,
+  weeksCoveringStays,
+  type SchedulePort,
+} from './services/weekSchedule';
 import './App.css';
 
-type Page = 'dashboard' | 'feedback' | 'admin';
+type Page = 'dashboard' | 'feedback' | 'admin' | 'schedule';
 
 const getPageFromLocation = (): Page => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/admin') return 'admin';
+  if (path === '/schedule') return 'schedule';
 
   const hash = window.location.hash.replace(/^#\/?/, '');
   if (hash === 'feedback') return 'feedback';
   if (hash === 'admin') return 'admin';
+  if (hash === 'schedule') return 'schedule';
   return 'dashboard';
 };
 
@@ -40,6 +53,8 @@ function App() {
   const PORTS = ['Vancouver', 'Portland', 'Longview'] as const;
   const [activePort, setActivePort] = useState<string>(PORTS[0]);
   const [page, setPage] = useState<Page>(getPageFromLocation);
+  const [scheduleWeek, setScheduleWeek] = useState(() => startOfWeekMonday(new Date()));
+  const [schedulePorts, setSchedulePorts] = useState<SchedulePort[]>([...SCHEDULE_PORTS]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     ...DEFAULT_SETTINGS,
     popup: { ...DEFAULT_POPUP },
@@ -92,10 +107,16 @@ function App() {
     };
   }, []);
 
-  const goTo = (next: Page) => {
+  const goTo = (next: Page, search = '') => {
     if (next === 'admin') {
       window.history.pushState({}, '', '/admin');
       setPage('admin');
+      return;
+    }
+
+    if (next === 'schedule') {
+      window.history.pushState({}, '', `/schedule${search}`);
+      setPage('schedule');
       return;
     }
 
@@ -114,6 +135,13 @@ function App() {
     setPage('dashboard');
   };
 
+  const openWeekSchedule = () => {
+    const params = new URLSearchParams();
+    params.set('week', toWeekParam(scheduleWeek));
+    params.set('ports', schedulePorts.join(','));
+    goTo('schedule', `?${params.toString()}`);
+  };
+
   const publishedAnnouncements = siteSettings.announcements.filter((item) => item.published);
   const themeMark = THEMES.find((theme) => theme.id === siteSettings.theme)?.mark;
   const headerSubtitle = siteSettings.subtitle.trim() || 'Columbia River Ship Traffic';
@@ -129,6 +157,16 @@ function App() {
       return sum + data.filter((v) => isPortMatch(v.fromLocationName, v.fromLocationShortCode, port)).length;
     }, 0);
   }, [data]);
+
+  const allPortStays = useMemo(() => buildPortStays(data), [data]);
+  const scheduleWeeks = useMemo(() => weeksCoveringStays(allPortStays), [allPortStays]);
+  const weekStayCount = useMemo(
+    () =>
+      staysOverlappingWeek(allPortStays, scheduleWeek).filter((stay) =>
+        schedulePorts.includes(stay.port)
+      ).length,
+    [allPortStays, scheduleWeek, schedulePorts]
+  );
 
   const portGroups = useMemo(() => {
     return PORTS.reduce((acc, port) => {
@@ -229,6 +267,9 @@ function App() {
                 <button className="refresh-button" onClick={() => loadData()}>
                   <span>🔄</span> Refresh
                 </button>
+                <button className="refresh-button" onClick={openWeekSchedule}>
+                  Week in port
+                </button>
                 <AddToHomeScreen />
                 <button className="feedback-button" onClick={() => goTo('feedback')}>
                   Give Feedback
@@ -258,6 +299,12 @@ function App() {
           <FeedbackPage onBack={() => goTo('dashboard')} />
         ) : page === 'admin' ? (
           <AdminPage settings={siteSettings} onSettingsChange={setSiteSettings} />
+        ) : page === 'schedule' ? (
+          <WeekSchedulePage
+            data={data}
+            initialWeek={new URLSearchParams(window.location.search).get('week')}
+            initialPorts={new URLSearchParams(window.location.search).get('ports')}
+          />
         ) : (
           <>
             {publishedAnnouncements.length > 0 && (
@@ -267,6 +314,16 @@ function App() {
                 ))}
               </div>
             )}
+
+            <WeekScheduleBuilder
+              weekStart={scheduleWeek}
+              weeks={scheduleWeeks}
+              ports={schedulePorts}
+              stayCount={weekStayCount}
+              onWeekChange={setScheduleWeek}
+              onPortsChange={setSchedulePorts}
+              onBuild={openWeekSchedule}
+            />
 
             <div className="movement-toggle-container">
               <button
@@ -391,6 +448,9 @@ function App() {
         {page === 'dashboard' && (
           <>
             <AddToHomeScreen variant="footer" />
+            <button className="footer-feedback-link" onClick={openWeekSchedule}>
+              Week in port
+            </button>
             <button className="footer-feedback-link" onClick={() => goTo('feedback')}>
               Give Feedback
             </button>
