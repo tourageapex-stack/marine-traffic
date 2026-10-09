@@ -621,6 +621,10 @@ tbody td {
   vertical-align: middle;
 }
 
+tbody td.vessel-datetime {
+  white-space: nowrap;
+}
+
 tr:hover td {
   background: #f8fafc;
 }
@@ -905,6 +909,7 @@ button.vessel-card-link .card-vessel-name {
   background: #f1f5f9;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .card-vessel-name {

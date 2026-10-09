@@ -77,12 +77,13 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
     try {
       const date = new Date(timeStr);
       if (isNaN(date.getTime())) return timeStr;
-      return date.toLocaleString([], { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: false 
+      return date.toLocaleString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     } catch {
       return timeStr;
@@ -171,9 +172,9 @@ export const VesselTable: React.FC<VesselTableProps> = ({ data, movementType = '
                     {vessel.status}
                   </span>
                 </td>
-                <td style={{ color: '#64748b', fontSize: '0.8125rem' }}>{formatTime(vessel.orderTime)}</td>
+                <td className="vessel-datetime" style={{ color: '#64748b', fontSize: '0.8125rem' }}>{formatTime(vessel.orderTime)}</td>
                 {isTieUps && (
-                  <td style={{ color: '#0ea5e9', fontSize: '0.8125rem', fontWeight: 500 }}>
+                  <td className="vessel-datetime" style={{ color: '#0ea5e9', fontSize: '0.8125rem', fontWeight: 500 }}>
                     {getEstimatedTieUpTime(vessel) || '-'}
                   </td>
                 )}
