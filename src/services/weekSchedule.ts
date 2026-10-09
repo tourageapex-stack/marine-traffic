@@ -199,36 +199,92 @@ export const addDays = (date: Date, days: number): Date => {
   return next;
 };
 
+export const MAX_RANGE_DAYS = 31;
+
 export const weekEndExclusive = (weekStart: Date): Date => addDays(weekStart, 7);
 
 export const weekDays = (weekStart: Date): Date[] =>
   Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 
-export const toWeekParam = (weekStart: Date): string => {
-  const year = weekStart.getFullYear();
-  const month = String(weekStart.getMonth() + 1).padStart(2, '0');
-  const day = String(weekStart.getDate()).padStart(2, '0');
+export const toDateParam = (date: Date): string => {
+  const local = startOfLocalDay(date);
+  const year = local.getFullYear();
+  const month = String(local.getMonth() + 1).padStart(2, '0');
+  const day = String(local.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-export const parseWeekParam = (value?: string | null): Date | null => {
+export const toWeekParam = (weekStart: Date): string => toDateParam(weekStart);
+
+export const parseDateParam = (value?: string | null): Date | null => {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const [year, month, day] = value.split('-').map(Number);
   const date = new Date(year, month - 1, day);
   if (Number.isNaN(date.getTime())) return null;
-  return startOfWeekMonday(date);
+  return startOfLocalDay(date);
 };
 
-export const staysOverlappingWeek = (stays: PortStay[], weekStart: Date): PortStay[] => {
-  const start = startOfLocalDay(weekStart).getTime();
-  const end = weekEndExclusive(weekStart).getTime();
+export const parseWeekParam = (value?: string | null): Date | null => {
+  const date = parseDateParam(value);
+  return date ? startOfWeekMonday(date) : null;
+};
+
+export const sameDay = (a: Date, b: Date): boolean =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+export const daysBetweenInclusive = (start: Date, end: Date): number => {
+  const a = startOfLocalDay(start).getTime();
+  const b = startOfLocalDay(end).getTime();
+  return Math.floor(Math.abs(b - a) / MS_DAY) + 1;
+};
+
+export const normalizeRange = (start: Date, end: Date): { start: Date; end: Date } => {
+  let rangeStart = startOfLocalDay(start);
+  let rangeEnd = startOfLocalDay(end);
+  if (rangeEnd.getTime() < rangeStart.getTime()) {
+    const swap = rangeStart;
+    rangeStart = rangeEnd;
+    rangeEnd = swap;
+  }
+  const maxEnd = addDays(rangeStart, MAX_RANGE_DAYS - 1);
+  if (rangeEnd.getTime() > maxEnd.getTime()) rangeEnd = maxEnd;
+  return { start: rangeStart, end: rangeEnd };
+};
+
+export const rangeDays = (start: Date, end: Date): Date[] => {
+  const range = normalizeRange(start, end);
+  const days: Date[] = [];
+  let cursor = range.start;
+  while (cursor.getTime() <= range.end.getTime()) {
+    days.push(new Date(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return days;
+};
+
+export const isSevenDayWeek = (start: Date, end: Date): boolean => {
+  const range = normalizeRange(start, end);
+  return daysBetweenInclusive(range.start, range.end) === 7 && range.start.getDay() === 1;
+};
+
+export const rangeEndExclusive = (end: Date): Date => addDays(startOfLocalDay(end), 1);
+
+export const staysOverlappingRange = (stays: PortStay[], start: Date, end: Date): PortStay[] => {
+  const range = normalizeRange(start, end);
+  const rangeStart = range.start.getTime();
+  const rangeEnd = rangeEndExclusive(range.end).getTime();
   return stays.filter((stay) => {
     const berthed = parseTime(stay.berthedAt)?.getTime();
     if (berthed == null) return false;
-    const letGo = parseTime(stay.letGoAt)?.getTime() ?? end;
-    return berthed < end && letGo > start;
+    const letGo = parseTime(stay.letGoAt)?.getTime() ?? rangeEnd;
+    return berthed < rangeEnd && letGo > rangeStart;
   });
 };
+
+export const staysOverlappingWeek = (stays: PortStay[], weekStart: Date): PortStay[] =>
+  staysOverlappingRange(stays, weekStart, addDays(weekStart, 6));
 
 export const weeksCoveringStays = (stays: PortStay[], fallback = new Date()): Date[] => {
   if (stays.length === 0) return [startOfWeekMonday(fallback)];
@@ -265,14 +321,20 @@ export const formatWeekdayDateTime = (value?: string | null): string => {
   });
 };
 
-export const formatWeekLabel = (weekStart: Date): string => {
-  const end = addDays(weekStart, 6);
-  const startLabel = weekStart.toLocaleDateString([], {
+export const formatDayLabel = (date: Date): string =>
+  date.toLocaleDateString([], {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
   });
-  const endLabel = end.toLocaleDateString([], {
+
+export const formatWeekLabel = (weekStart: Date): string =>
+  formatRangeLabel(weekStart, addDays(weekStart, 6));
+
+export const formatRangeLabel = (start: Date, end: Date): string => {
+  const range = normalizeRange(start, end);
+  const startLabel = formatDayLabel(range.start);
+  const endLabel = range.end.toLocaleDateString([], {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -294,19 +356,21 @@ export const formatWorkingHours = (stay: PortStay): string => {
 
 export const stayBarPosition = (
   stay: PortStay,
-  weekStart: Date
+  rangeStart: Date,
+  rangeEnd: Date = addDays(rangeStart, 6)
 ): { left: string; width: string; continuesBefore: boolean; continuesAfter: boolean } => {
-  const weekMs = 7 * MS_DAY;
-  const start = startOfLocalDay(weekStart).getTime();
-  const end = start + weekMs;
+  const range = normalizeRange(rangeStart, rangeEnd);
+  const start = range.start.getTime();
+  const end = rangeEndExclusive(range.end).getTime();
+  const rangeMs = Math.max(end - start, MS_HOUR);
   const berthed = parseTime(stay.berthedAt)?.getTime() ?? start;
   const letGo = parseTime(stay.letGoAt)?.getTime() ?? end;
   const clippedStart = Math.min(Math.max(berthed, start), end);
   const clippedEnd = Math.min(Math.max(letGo, start), end);
   const widthMs = Math.max(clippedEnd - clippedStart, MS_HOUR / 2);
   return {
-    left: `${((clippedStart - start) / weekMs) * 100}%`,
-    width: `${(widthMs / weekMs) * 100}%`,
+    left: `${((clippedStart - start) / rangeMs) * 100}%`,
+    width: `${(widthMs / rangeMs) * 100}%`,
     continuesBefore: berthed < start,
     continuesAfter: !stay.letGoAt || letGo > end,
   };

@@ -1774,11 +1774,81 @@ button.vessel-card-link .card-vessel-name {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  padding: 0.35rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.week-builder-card:not(.collapsed) {
+  padding: 1.25rem 1.5rem;
   display: grid;
   gap: 1rem;
+}
+
+.week-builder-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+}
+
+.week-builder-toggle:hover {
+  background: #f8fafc;
+}
+
+.week-builder-card:not(.collapsed) .week-builder-toggle {
+  padding: 0 0 0.85rem;
+  margin: 0;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+}
+
+.week-builder-card:not(.collapsed) .week-builder-toggle:hover {
+  background: transparent;
+}
+
+.week-builder-toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.week-builder-toggle-copy strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.week-builder-toggle-copy span {
+  color: #64748b;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.week-builder-chevron {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.week-builder-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.week-builder-intro,
+.week-builder-copy p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .week-builder-copy h2 {
@@ -1789,14 +1859,13 @@ button.vessel-card-link .card-vessel-name {
 
 .week-builder-copy p {
   margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
 }
 
 .week-builder-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 1.2fr) minmax(220px, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(280px, 1.35fr) minmax(180px, 0.8fr);
+  gap: 1.25rem;
+  align-items: start;
 }
 
 .week-builder-field {
@@ -1818,14 +1887,155 @@ button.vessel-card-link .card-vessel-name {
   letter-spacing: 0.04em;
 }
 
-.week-builder-field select {
-  width: 100%;
+.date-range-picker {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.date-range-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.date-range-bound {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.date-range-bound.picking {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.date-range-bound span {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.date-range-bound strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.date-calendar {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+.date-calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.date-calendar-month {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.date-calendar-nav-btn {
+  width: 32px;
+  height: 32px;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   border-radius: 8px;
-  padding: 0.7rem 0.85rem;
-  font-size: 0.9rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #334155;
+}
+
+.date-calendar-weekdays,
+.date-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.15rem;
+}
+
+.date-calendar-weekdays span {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  padding: 0.2rem 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.date-calendar-day {
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  height: 34px;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #0f172a;
+  cursor: pointer;
+}
+
+.date-calendar-day.outside {
+  color: #cbd5e1;
+}
+
+.date-calendar-day.in-range {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.date-calendar-day.range-start,
+.date-calendar-day.range-end {
+  background: #2563eb;
+  color: white;
+}
+
+.date-calendar-day:hover {
+  background: #eff6ff;
+}
+
+.date-calendar-day.range-start:hover,
+.date-calendar-day.range-end:hover {
+  background: #1d4ed8;
+  color: white;
+}
+
+.date-week-presets span {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.date-week-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.date-week-preset {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.date-week-preset.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
 }
 
 .week-port-pills {
@@ -2069,7 +2279,7 @@ button.vessel-card-link .card-vessel-name {
 .schedule-gantt-track {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(var(--day-count, 7), minmax(56px, 1fr));
   min-width: 0;
 }
 
@@ -2111,10 +2321,14 @@ button.vessel-card-link .card-vessel-name {
   margin-top: 0.15rem;
 }
 
+.schedule-gantt {
+  overflow-x: auto;
+}
+
 .schedule-gantt-track {
   min-height: 52px;
   background-image: linear-gradient(to right, #f8fafc 1px, transparent 1px);
-  background-size: calc(100% / 7) 100%;
+  background-size: calc(100% / var(--day-count, 7)) 100%;
 }
 
 .schedule-gantt-bar {
@@ -2161,6 +2375,7 @@ button.vessel-card-link .card-vessel-name {
 
 @media (max-width: 768px) {
   .week-builder-controls,
+  .date-range-summary,
   .schedule-gantt-head,
   .schedule-gantt-row,
   .schedule-sheet-header {
@@ -2178,7 +2393,7 @@ button.vessel-card-link .card-vessel-name {
 
   .schedule-gantt-head,
   .schedule-gantt-row {
-    min-width: 720px;
+    min-width: calc(180px + (var(--day-count, 7) * 56px));
     grid-template-columns: 180px 1fr;
   }
 

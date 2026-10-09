@@ -3,22 +3,27 @@ import type { VesselTraffic } from '../services/api';
 import type { PortStay, SchedulePort } from '../services/weekSchedule';
 import {
   SCHEDULE_PORTS,
+  addDays,
   buildPortStays,
-  formatWeekLabel,
+  formatRangeLabel,
   formatWeekdayDateTime,
   formatWorkingHours,
+  normalizeRange,
+  parseDateParam,
   parseWeekParam,
+  rangeDays,
   stayBarPosition,
-  staysOverlappingWeek,
+  staysOverlappingRange,
   startOfWeekMonday,
-  toWeekParam,
-  weekDays,
+  toDateParam,
   weeksCoveringStays,
 } from '../services/weekSchedule';
 import { WeekScheduleBuilder } from './WeekScheduleBuilder';
 
 interface WeekSchedulePageProps {
   data: VesselTraffic[];
+  initialStart?: string | null;
+  initialEnd?: string | null;
   initialWeek?: string | null;
   initialPorts?: string | null;
 }
@@ -40,16 +45,31 @@ const readPorts = (value?: string | null): SchedulePort[] => {
   return selected.length > 0 ? selected : [...SCHEDULE_PORTS];
 };
 
+const readInitialRange = (
+  initialStart?: string | null,
+  initialEnd?: string | null,
+  initialWeek?: string | null,
+  fallbackWeeks: Date[] = []
+) => {
+  const start = parseDateParam(initialStart);
+  const end = parseDateParam(initialEnd);
+  if (start && end) return normalizeRange(start, end);
+  const week = parseWeekParam(initialWeek) || fallbackWeeks[0] || startOfWeekMonday(new Date());
+  return { start: week, end: addDays(week, 6) };
+};
+
 export function WeekSchedulePage({
   data,
+  initialStart,
+  initialEnd,
   initialWeek,
   initialPorts,
 }: WeekSchedulePageProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const allStays = useMemo(() => buildPortStays(data), [data]);
   const weeks = useMemo(() => weeksCoveringStays(allStays), [allStays]);
-  const [weekStart, setWeekStart] = useState(
-    () => parseWeekParam(initialWeek) || weeks[0] || startOfWeekMonday(new Date())
+  const [range, setRange] = useState(() =>
+    readInitialRange(initialStart, initialEnd, initialWeek, weeks)
   );
   const [ports, setPorts] = useState<SchedulePort[]>(() => readPorts(initialPorts));
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
@@ -57,15 +77,17 @@ export function WeekSchedulePage({
   const [exporting, setExporting] = useState(false);
 
   const weekStays = useMemo(() => {
-    return staysOverlappingWeek(allStays, weekStart).filter((stay) => ports.includes(stay.port));
-  }, [allStays, weekStart, ports]);
+    return staysOverlappingRange(allStays, range.start, range.end).filter((stay) =>
+      ports.includes(stay.port)
+    );
+  }, [allStays, range, ports]);
 
   const visibleStays = useMemo(
     () => weekStays.filter((stay) => !hiddenIds.has(stay.id)),
     [weekStays, hiddenIds]
   );
 
-  const days = weekDays(weekStart);
+  const days = rangeDays(range.start, range.end);
   const [generatedAt] = useState(() => formatWeekdayDateTime(new Date().toISOString()));
 
   const toggleStay = (id: string) => {
@@ -92,7 +114,7 @@ export function WeekSchedulePage({
         skipFonts: true,
       });
       const link = document.createElement('a');
-      link.download = `river-watch-week-in-port-${toWeekParam(weekStart)}.png`;
+      link.download = `river-watch-week-in-port-${toDateParam(range.start)}-to-${toDateParam(range.end)}.png`;
       link.href = dataUrl;
       link.click();
       setStatusMessage('Schedule image downloaded.');
@@ -138,12 +160,13 @@ export function WeekSchedulePage({
   return (
     <div className="schedule-page">
       <WeekScheduleBuilder
-        weekStart={weekStart}
+        rangeStart={range.start}
+        rangeEnd={range.end}
         weeks={weeks}
         ports={ports}
         stayCount={weekStays.length}
-        onWeekChange={(next) => {
-          setWeekStart(next);
+        onRangeChange={(start, end) => {
+          setRange(normalizeRange(start, end));
           setHiddenIds(new Set());
         }}
         onPortsChange={(next) => {
@@ -209,7 +232,7 @@ export function WeekSchedulePage({
           <div>
             <div className="schedule-kicker">River Watch</div>
             <h2>Week in port</h2>
-            <p className="schedule-range">{formatWeekLabel(weekStart)}</p>
+            <p className="schedule-range">{formatRangeLabel(range.start, range.end)}</p>
           </div>
           <div className="schedule-sheet-meta">
             <div>{ports.join(' · ')}</div>
@@ -220,11 +243,16 @@ export function WeekSchedulePage({
 
         {visibleStays.length === 0 ? (
           <div className="schedule-empty">
-            No ships are at a named berth for this week. Try another week or include more ports.
+            No ships are at a named berth for these dates. Try another range or include more ports.
           </div>
         ) : (
           <>
-            <div className="schedule-gantt" role="img" aria-label="Timeline of ships working at berth">
+            <div
+              className="schedule-gantt"
+              role="img"
+              aria-label="Timeline of ships working at berth"
+              style={{ ['--day-count' as string]: String(days.length) }}
+            >
               <div className="schedule-gantt-head">
                 <div className="schedule-gantt-ship-col">Ship / berth</div>
                 <div className="schedule-gantt-days">
@@ -237,7 +265,7 @@ export function WeekSchedulePage({
                 </div>
               </div>
               {visibleStays.map((stay) => (
-                <GanttRow key={stay.id} stay={stay} weekStart={weekStart} />
+                <GanttRow key={stay.id} stay={stay} rangeStart={range.start} rangeEnd={range.end} />
               ))}
             </div>
 
@@ -278,8 +306,16 @@ export function WeekSchedulePage({
   );
 }
 
-function GanttRow({ stay, weekStart }: { stay: PortStay; weekStart: Date }) {
-  const bar = stayBarPosition(stay, weekStart);
+function GanttRow({
+  stay,
+  rangeStart,
+  rangeEnd,
+}: {
+  stay: PortStay;
+  rangeStart: Date;
+  rangeEnd: Date;
+}) {
+  const bar = stayBarPosition(stay, rangeStart, rangeEnd);
   const title = `${stay.vesselName} at ${stay.berthName}: ${formatWeekdayDateTime(stay.berthedAt)} to ${
     stay.letGoAt ? formatWeekdayDateTime(stay.letGoAt) : 'in port'
   }`;

@@ -19,10 +19,11 @@ import {
 } from './services/siteSettings';
 import {
   SCHEDULE_PORTS,
+  addDays,
   buildPortStays,
   startOfWeekMonday,
-  staysOverlappingWeek,
-  toWeekParam,
+  staysOverlappingRange,
+  toDateParam,
   weeksCoveringStays,
   type SchedulePort,
 } from './services/weekSchedule';
@@ -53,7 +54,8 @@ function App() {
   const PORTS = ['Vancouver', 'Portland', 'Longview'] as const;
   const [activePort, setActivePort] = useState<string>(PORTS[0]);
   const [page, setPage] = useState<Page>(getPageFromLocation);
-  const [scheduleWeek, setScheduleWeek] = useState(() => startOfWeekMonday(new Date()));
+  const [scheduleStart, setScheduleStart] = useState(() => startOfWeekMonday(new Date()));
+  const [scheduleEnd, setScheduleEnd] = useState(() => addDays(startOfWeekMonday(new Date()), 6));
   const [schedulePorts, setSchedulePorts] = useState<SchedulePort[]>([...SCHEDULE_PORTS]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     ...DEFAULT_SETTINGS,
@@ -137,7 +139,8 @@ function App() {
 
   const openWeekSchedule = () => {
     const params = new URLSearchParams();
-    params.set('week', toWeekParam(scheduleWeek));
+    params.set('start', toDateParam(scheduleStart));
+    params.set('end', toDateParam(scheduleEnd));
     params.set('ports', schedulePorts.join(','));
     goTo('schedule', `?${params.toString()}`);
   };
@@ -162,10 +165,10 @@ function App() {
   const scheduleWeeks = useMemo(() => weeksCoveringStays(allPortStays), [allPortStays]);
   const weekStayCount = useMemo(
     () =>
-      staysOverlappingWeek(allPortStays, scheduleWeek).filter((stay) =>
+      staysOverlappingRange(allPortStays, scheduleStart, scheduleEnd).filter((stay) =>
         schedulePorts.includes(stay.port)
       ).length,
-    [allPortStays, scheduleWeek, schedulePorts]
+    [allPortStays, scheduleStart, scheduleEnd, schedulePorts]
   );
 
   const portGroups = useMemo(() => {
@@ -302,6 +305,8 @@ function App() {
         ) : page === 'schedule' ? (
           <WeekSchedulePage
             data={data}
+            initialStart={new URLSearchParams(window.location.search).get('start')}
+            initialEnd={new URLSearchParams(window.location.search).get('end')}
             initialWeek={new URLSearchParams(window.location.search).get('week')}
             initialPorts={new URLSearchParams(window.location.search).get('ports')}
           />
@@ -316,13 +321,19 @@ function App() {
             )}
 
             <WeekScheduleBuilder
-              weekStart={scheduleWeek}
+              rangeStart={scheduleStart}
+              rangeEnd={scheduleEnd}
               weeks={scheduleWeeks}
               ports={schedulePorts}
               stayCount={weekStayCount}
-              onWeekChange={setScheduleWeek}
+              onRangeChange={(start, end) => {
+                setScheduleStart(start);
+                setScheduleEnd(end);
+              }}
               onPortsChange={setSchedulePorts}
               onBuild={openWeekSchedule}
+              collapsible
+              defaultOpen={false}
             />
 
             <div className="movement-toggle-container">
