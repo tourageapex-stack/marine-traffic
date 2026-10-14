@@ -5,6 +5,7 @@ import {
   SCHEDULE_PORTS,
   addDays,
   buildPortStays,
+  formatBerthedLabel,
   formatRangeLabel,
   formatWeekdayDateTime,
   formatWorkingHours,
@@ -198,7 +199,7 @@ export function WeekSchedulePage({
                   />
                   <span className="schedule-picker-name">{stay.vesselName}</span>
                   <span className="schedule-picker-meta">
-                    {stay.berthCode} · {formatWeekdayDateTime(stay.berthedAt)}
+                    {stay.berthCode} · {formatBerthedLabel(stay)}
                   </span>
                 </label>
               </li>
@@ -290,7 +291,7 @@ export function WeekSchedulePage({
                         {stay.berthCode}
                       </span>
                     </td>
-                    <td className="vessel-datetime">{formatWeekdayDateTime(stay.berthedAt)}</td>
+                    <td className="vessel-datetime">{formatBerthedLabel(stay)}</td>
                     <td className="vessel-datetime">
                       {stay.letGoAt ? formatWeekdayDateTime(stay.letGoAt) : 'In port / TBD'}
                     </td>
@@ -316,7 +317,7 @@ function GanttRow({
   rangeEnd: Date;
 }) {
   const bar = stayBarPosition(stay, rangeStart, rangeEnd);
-  const title = `${stay.vesselName} at ${stay.berthName}: ${formatWeekdayDateTime(stay.berthedAt)} to ${
+  const title = `${stay.vesselName} at ${stay.berthName}: ${formatBerthedLabel(stay)} to ${
     stay.letGoAt ? formatWeekdayDateTime(stay.letGoAt) : 'in port'
   }`;
 
