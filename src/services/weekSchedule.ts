@@ -11,6 +11,8 @@ export interface PortStay {
   berthCode: string;
   berthName: string;
   berthedAt: string;
+  /** Tie-up order has left the board; the ship is still alongside until let-go. */
+  alreadyAlongside: boolean;
   letGoAt: string | null;
   letGoDestination?: string;
   arrivalStatus: string;
@@ -149,9 +151,17 @@ export const portForWorkingBerth = (
 
   const n = (name || '').toLowerCase();
   const c = (code || '').toUpperCase().trim();
-  if (c === 'CHEV' || n.includes('chevron')) return 'Portland';
+  if (c === 'CHEV' || c === 'CHEVU' || c === 'CHEVL' || n.includes('chevron')) return 'Portland';
+  if (c === 'PHILO' || c === 'PHILU' || n.includes('phillips')) return 'Portland';
   if (c === 'SEAPT' || n.includes('seaport')) return 'Longview';
   return null;
+};
+
+/** Occupancy we already know about, when the tie-up time itself is no longer on the board. */
+const alongsideSince = (letGoAt: Date): Date => {
+  const thisWeek = startOfWeekMonday(new Date());
+  if (thisWeek.getTime() < letGoAt.getTime()) return thisWeek;
+  return startOfLocalDay(letGoAt);
 };
 
 const parseTime = (value?: string | null): Date | null => {
@@ -183,10 +193,23 @@ export const estimateBerthArrival = (movement: VesselTraffic): Date | null => {
   return ordered;
 };
 
+/** Generic CHEV is "berth unknown" and pairs with Upper or Lower. Upper and Lower stay distinct. */
+const chevronBerth = (code?: string): 'CHEV' | 'CHEVU' | 'CHEVL' | null => {
+  const compact = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (compact === 'CHEV' || compact === 'CHEVU' || compact === 'CHEVL') return compact;
+  return null;
+};
+
 const sameBerth = (aCode?: string, aName?: string, bCode?: string, bName?: string) => {
   const ac = (aCode || '').toUpperCase().trim();
   const bc = (bCode || '').toUpperCase().trim();
-  if (ac && bc) return ac === bc;
+  if (ac && bc) {
+    if (ac === bc) return true;
+    const aChevron = chevronBerth(ac);
+    const bChevron = chevronBerth(bc);
+    if (aChevron && bChevron && (aChevron === 'CHEV' || bChevron === 'CHEV')) return true;
+    return false;
+  }
   return (aName || '').trim().toLowerCase() === (bName || '').trim().toLowerCase();
 };
 
@@ -298,6 +321,83 @@ export const buildPortStays = (data: VesselTraffic[]): PortStay[] => {
           ? letGo.toLocationShortCode || letGo.toLocationName
           : undefined,
         arrivalStatus: arrival.status,
+        alreadyAlongside: false,
+      });
+    }
+
+    // A completed tie-up drops off the current board. The ship is still at the
+    // berth until the remaining let-go order, so keep that occupancy on the schedule.
+    const earliestOpenDeparture = new Map<string, VesselTraffic>();
+    for (let index = 0; index < ordered.length; index += 1) {
+      if (usedLetGo.has(index)) continue;
+      const movement = ordered[index];
+      const port = portForWorkingBerth(movement.fromLocationName, movement.fromLocationShortCode);
+      if (!port) continue;
+      const letGoKey = movementInstantKey(movement, 'from');
+      if (letGoKey && (placeholderLetGos.get(letGoKey) || 0) >= PLACEHOLDER_LET_GO_COUNT) continue;
+      const letGoAt = parseTime(movement.orderTime);
+      if (!letGoAt) continue;
+
+      // The tie-up is still on the board (including a template call that we do not
+      // schedule). This departure is not a ship already working the berth.
+      const tieUpStillOnBoard = ordered.some((job) => {
+        if (!portForWorkingBerth(job.toLocationName, job.toLocationShortCode)) return false;
+        if (
+          !sameBerth(
+            job.toLocationShortCode,
+            job.toLocationName,
+            movement.fromLocationShortCode,
+            movement.fromLocationName
+          )
+        ) {
+          return false;
+        }
+        const arrivalTime = parseTime(job.orderTime);
+        return arrivalTime != null && arrivalTime.getTime() <= letGoAt.getTime();
+      });
+      if (tieUpStillOnBoard) continue;
+
+      const paired = stays.some(
+        (stay) =>
+          stay.vesselName === vesselName &&
+          stay.letGoAt === movement.orderTime &&
+          sameBerth(
+            stay.berthCode,
+            stay.berthName,
+            movement.fromLocationShortCode,
+            movement.fromLocationName
+          )
+      );
+      if (paired) continue;
+
+      const berthCode = (movement.fromLocationShortCode || movement.fromLocationName || port).trim();
+      const berthKey = `${port}|${berthCode.toUpperCase()}`;
+      const existing = earliestOpenDeparture.get(berthKey);
+      const existingTime = existing ? parseTime(existing.orderTime)?.getTime() ?? Infinity : Infinity;
+      if (letGoAt.getTime() < existingTime) earliestOpenDeparture.set(berthKey, movement);
+    }
+
+    for (const movement of earliestOpenDeparture.values()) {
+      const letGoAt = parseTime(movement.orderTime);
+      if (!letGoAt) continue;
+      const berthedAt = alongsideSince(letGoAt);
+      if (berthedAt.getTime() >= letGoAt.getTime()) continue;
+      const port = portForWorkingBerth(movement.fromLocationName, movement.fromLocationShortCode);
+      if (!port) continue;
+      const berthCode = (movement.fromLocationShortCode || '').trim();
+      const berthName = (movement.fromLocationName || berthCode || 'Berth').trim();
+      stays.push({
+        id: `${vesselName}|${berthCode}|alongside|${letGoAt.toISOString()}`,
+        vesselName,
+        vesselType: movement.vessel?.type,
+        port,
+        berthCode: berthCode || berthName,
+        berthName,
+        berthedAt: berthedAt.toISOString(),
+        alreadyAlongside: true,
+        letGoAt: movement.orderTime,
+        letGoDestination: movement.toLocationShortCode || movement.toLocationName,
+        arrivalStatus: movement.status,
       });
     }
   }
@@ -472,7 +572,11 @@ export const formatRangeLabel = (start: Date, end: Date): string => {
   return `${startLabel} – ${endLabel}`;
 };
 
+export const formatBerthedLabel = (stay: PortStay): string =>
+  stay.alreadyAlongside ? 'Alongside' : formatWeekdayDateTime(stay.berthedAt);
+
 export const formatWorkingHours = (stay: PortStay): string => {
+  if (stay.alreadyAlongside) return 'Alongside';
   const start = parseTime(stay.berthedAt);
   const end = parseTime(stay.letGoAt);
   if (!start || !end) return stay.letGoAt ? '—' : 'In port';

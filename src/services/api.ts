@@ -41,12 +41,14 @@ export const isPortMatch = (name?: string, code?: string, port: string = ''): bo
     return (
       n.includes('portland') ||
       c.includes('pdx') ||
-      ['204', '206', '312', '314', '411', '601', '603', '605', '607', 'dd5', 'dd6', 'col', 'ashgr', 'usg', 'glacr'].includes(c) ||
+      ['204', '206', '312', '314', '411', '601', '603', '605', '607', 'dd5', 'dd6', 'col', 'ashgr', 'usg', 'glacr', 'chev', 'chevu', 'chevl', 'philo', 'philu'].includes(c) ||
       n.includes('swan isl') ||
       n.includes('columbia grain') ||
       n.includes('ashgrove') ||
       n.includes('us gypsum') ||
-      n.includes('glacier northwest')
+      n.includes('glacier northwest') ||
+      n.includes('chevron') ||
+      n.includes('phillips')
     );
   }
   if (p === 'longview') {
