@@ -1,6 +1,4 @@
-import { parseBarStatusHtml } from './lib/bar-status.js';
-
-const SOURCE_URL = 'https://www.columbiariverbarpilots.com/bar-status/';
+import { loadBarStatus } from './lib/bar-status.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -19,22 +17,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(SOURCE_URL, {
-      headers: {
-        Accept: 'text/html',
-        'User-Agent': 'RiverWatch/1.0',
-      },
-    });
-
-    if (!response.ok) {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'no-store');
-      res.end(JSON.stringify({ error: 'Bar status unavailable' }));
-      return;
-    }
-
-    const status = parseBarStatusHtml(await response.text());
+    const status = await loadBarStatus();
     if (!status) {
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json');
