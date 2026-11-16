@@ -35,6 +35,12 @@ async function dispatch(req: IncomingMessage, res: ServerResponse) {
     return true;
   }
 
+  if (pathname === '/api/bar-status') {
+    const { default: handler } = await import('../api/bar-status.js');
+    await handler(req, res);
+    return true;
+  }
+
   return false;
 }
 
