@@ -1,17 +1,29 @@
 import { isPortMatch, type VesselTraffic } from './api';
 
-/** Astoria, the bar (LS), and LU are about six hours from Portland and Vancouver. */
+/** The Astoria pilot station (LS) is about eight hours from Portland and Vancouver. */
+export const LIGHTSHIP_TRANSIT_HOURS = 8;
+/** Astoria and LU are about six hours from Portland and Vancouver. */
 export const ASTORIA_TRANSIT_HOURS = 6;
 /** Longview is about two hours from Portland and Vancouver. */
 export const LONGVIEW_TRANSIT_HOURS = 2;
 
 const compactCode = (code?: string) => (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
+/** Bar / lightship departures. The location name also says Astoria, so this is checked first. */
+export const isLightshipOrigin = (name?: string, code?: string): boolean => {
+  const n = (name || '').toUpperCase();
+  const raw = (code || '').toUpperCase().trim();
+  const c = compactCode(code);
+  if (c === 'LS' || raw === 'LS' || raw.startsWith('LS ')) return true;
+  return n === 'LS' || n.includes('LIGHTSHIP') || n.includes('ASTORIA PILOT STATION (LS)');
+};
+
 export const isAstoriaOrigin = (name?: string, code?: string): boolean => {
+  if (isLightshipOrigin(name, code)) return false;
   const n = (name || '').toUpperCase();
   const c = compactCode(code);
-  if (c === 'LS' || c === 'AST' || c === 'ASTAN' || c.startsWith('AST')) return true;
-  return n.includes('ASTORIA') || n.includes('LIGHTSHIP');
+  if (c === 'AST' || c === 'ASTAN' || c.startsWith('AST')) return true;
+  return n.includes('ASTORIA');
 };
 
 /** LU is a downriver origin with the same run to Portland and Vancouver as Astoria. */
@@ -53,7 +65,10 @@ export const estimateTieUp = (vessel: VesselTraffic): TieUpEstimate | null => {
   let hours = 0;
   let note = '';
 
-  if (isAstoriaOrigin(fromName, fromCode)) {
+  if (isLightshipOrigin(fromName, fromCode)) {
+    hours = LIGHTSHIP_TRANSIT_HOURS;
+    note = 'About 8 hours from LS';
+  } else if (isAstoriaOrigin(fromName, fromCode)) {
     hours = ASTORIA_TRANSIT_HOURS;
     note = 'About 6 hours from Astoria';
   } else if (isLuOrigin(fromName, fromCode)) {
