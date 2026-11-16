@@ -229,6 +229,106 @@ header {
   font-weight: 600;
 }
 
+.bar-status-strip {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.bar-status-strip:hover .bar-status-label {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bar-status {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.75rem 2rem;
+}
+
+.bar-status-badge {
+  flex-shrink: 0;
+  min-width: 4.5rem;
+  margin-top: 0.1rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.bar-status-badge-red {
+  background: red;
+  color: white;
+}
+
+.bar-status-badge-yellow {
+  background: yellow;
+  color: #1a1a1a;
+}
+
+.bar-status-badge-green {
+  background: green;
+  color: white;
+}
+
+.bar-status-red {
+  background: #fef2f2;
+}
+
+.bar-status-yellow {
+  background: #fffbeb;
+}
+
+.bar-status-green {
+  background: #f0fdf4;
+}
+
+.bar-status-pending {
+  background: #f8fafc;
+}
+
+.bar-status-copy {
+  min-width: 0;
+}
+
+.bar-status-kicker,
+.bar-status-meta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #64748b;
+}
+
+.bar-status-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.bar-status-detail {
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.bar-status-meta {
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+.bar-status-pending-copy {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
 /* Announcement tile */
 .announcement-row {
   display: flex;
@@ -803,6 +903,10 @@ button.vessel-card-link .card-vessel-name {
 
   .main-content {
     padding: 1rem;
+  }
+
+  .bar-status {
+    padding: 0.75rem 1rem;
   }
 
   .movement-toggle-container {
