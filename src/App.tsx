@@ -7,6 +7,7 @@ import { AdminPage } from './components/AdminPage';
 import { AnnouncementTile } from './components/AnnouncementTile';
 import { PopupAnnouncementModal } from './components/PopupAnnouncementModal';
 import { UpdateNotice } from './components/UpdateNotice';
+import { checkForAppUpdate } from './appUpdate';
 import { AddToHomeScreen } from './components/AddToHomeScreen';
 import { WeekScheduleBuilder } from './components/WeekScheduleBuilder';
 import { WeekSchedulePage } from './components/WeekSchedulePage';
@@ -267,7 +268,13 @@ function App() {
             {page === 'dashboard' ? (
               <>
                 <div className="timestamp">Updated {lastUpdated.toLocaleTimeString()}</div>
-                <button className="refresh-button" onClick={() => loadData()}>
+                <button
+                  className="refresh-button"
+                  onClick={() => {
+                    checkForAppUpdate();
+                    loadData();
+                  }}
+                >
                   <span>🔄</span> Refresh
                 </button>
                 <button className="refresh-button" onClick={openWeekSchedule}>

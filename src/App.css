@@ -1196,6 +1196,37 @@ button.vessel-card-link .card-vessel-name {
   background: #1d4ed8;
 }
 
+.app-update-overlay {
+  z-index: 1400;
+  padding:
+    calc(1.25rem + env(safe-area-inset-top))
+    calc(1.25rem + env(safe-area-inset-right))
+    calc(1.25rem + env(safe-area-inset-bottom))
+    calc(1.25rem + env(safe-area-inset-left));
+}
+
+.notice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notice-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.notice-button.notice-button-secondary,
+.app-container[data-theme] .notice-button.notice-button-secondary {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.notice-button.notice-button-secondary:hover,
+.app-container[data-theme] .notice-button.notice-button-secondary:hover {
+  background: #e2e8f0;
+}
+
 /* Admin */
 .admin-shell {
   display: flex;
