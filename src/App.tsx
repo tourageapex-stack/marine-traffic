@@ -8,9 +8,11 @@ import { AnnouncementTile } from './components/AnnouncementTile';
 import { PopupAnnouncementModal } from './components/PopupAnnouncementModal';
 import { UpdateNotice } from './components/UpdateNotice';
 import { checkForAppUpdate } from './appUpdate';
+import { BarStatusBanner } from './components/BarStatusBanner';
 import { AddToHomeScreen } from './components/AddToHomeScreen';
 import { WeekScheduleBuilder } from './components/WeekScheduleBuilder';
 import { WeekSchedulePage } from './components/WeekSchedulePage';
+import { fetchBarStatus, type BarStatus } from './services/barStatus';
 import {
   DEFAULT_SETTINGS,
   DEFAULT_POPUP,
@@ -62,6 +64,9 @@ function App() {
     ...DEFAULT_SETTINGS,
     popup: { ...DEFAULT_POPUP },
   });
+  const [barStatus, setBarStatus] = useState<BarStatus | null>(null);
+  const [barStatusLoading, setBarStatusLoading] = useState(true);
+  const [barStatusError, setBarStatusError] = useState(false);
 
   const isMobile = useMemo(() => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -81,8 +86,22 @@ function App() {
     }
   };
 
+  const loadBarStatus = async () => {
+    setBarStatusLoading(true);
+    try {
+      setBarStatus(await fetchBarStatus());
+      setBarStatusError(false);
+    } catch (err) {
+      console.error('Bar status error:', err);
+      setBarStatusError(true);
+    } finally {
+      setBarStatusLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadBarStatus();
   }, []);
 
   useEffect(() => {
@@ -273,6 +292,7 @@ function App() {
                   onClick={() => {
                     checkForAppUpdate();
                     loadData();
+                    loadBarStatus();
                   }}
                 >
                   <span>🔄</span> Refresh
@@ -293,6 +313,10 @@ function App() {
           </div>
         </div>
       </header>
+
+      {page === 'dashboard' && (
+        <BarStatusBanner status={barStatus} loading={barStatusLoading} error={barStatusError} />
+      )}
 
       {page === 'dashboard' && siteSettings.banner.trim() && (
         <div className="site-banner">{siteSettings.banner.trim()}</div>

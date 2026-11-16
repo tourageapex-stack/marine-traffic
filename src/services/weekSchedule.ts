@@ -1,4 +1,5 @@
 import { isPortMatch, type VesselTraffic } from './api';
+import { estimateTieUp } from './transit';
 
 export const SCHEDULE_PORTS = ['Vancouver', 'Portland', 'Longview'] as const;
 export type SchedulePort = (typeof SCHEDULE_PORTS)[number];
@@ -111,7 +112,6 @@ const compactLocationCode = (code?: string): string =>
 
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
-const VAN_PDX_TRANSIT_FROM_LS_MS = 8 * MS_HOUR;
 /** Alongside time shorter than this is a template order, not a ship at a berth. */
 const MIN_BERTH_STAY_MS = MS_HOUR;
 /** Several ships sharing one berth timestamp are still at anchor on a placeholder order. */
@@ -177,17 +177,8 @@ export const estimateBerthArrival = (movement: VesselTraffic): Date | null => {
   const ordered = parseTime(movement.orderTime);
   if (!ordered) return null;
 
-  const fromCode = (movement.fromLocationShortCode || '').toUpperCase();
-  const fromName = (movement.fromLocationName || '').toUpperCase();
-  const fromLightship =
-    fromCode === 'LS' ||
-    fromCode.includes('LS ') ||
-    fromName === 'LS' ||
-    fromName.includes('LIGHTSHIP') ||
-    fromName.includes('ASTORIA PILOT STATION (LS)');
-
-  if (fromLightship && (port === 'Vancouver' || port === 'Portland')) {
-    return new Date(ordered.getTime() + VAN_PDX_TRANSIT_FROM_LS_MS);
+  if (port === 'Vancouver' || port === 'Portland') {
+    return estimateTieUp(movement)?.at ?? ordered;
   }
 
   return ordered;
