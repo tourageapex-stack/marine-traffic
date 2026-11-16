@@ -20,4 +20,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['vite.config.ts', 'plugins/**/*.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

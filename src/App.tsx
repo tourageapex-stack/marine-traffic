@@ -7,6 +7,7 @@ import { AdminPage } from './components/AdminPage';
 import { AnnouncementTile } from './components/AnnouncementTile';
 import { PopupAnnouncementModal } from './components/PopupAnnouncementModal';
 import { UpdateNotice } from './components/UpdateNotice';
+import { checkForAppUpdate } from './appUpdate';
 import { BarStatusBanner } from './components/BarStatusBanner';
 import { AddToHomeScreen } from './components/AddToHomeScreen';
 import { WeekScheduleBuilder } from './components/WeekScheduleBuilder';
@@ -289,6 +290,7 @@ function App() {
                 <button
                   className="refresh-button"
                   onClick={() => {
+                    checkForAppUpdate();
                     loadData();
                     loadBarStatus();
                   }}
